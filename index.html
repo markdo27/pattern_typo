@@ -207,7 +207,10 @@ var state = {
     emblemSides:true,
     emblemRays:16,
     emblemCloverSize:70,
-    emblemCenterSize:30
+    emblemCenterSize:30,
+    emblemText:'WNYO',
+    emblemFont:'Outfit',
+    emblemCenterRotate:0
   }
 };
 var DEFAULT_PARAMS = JSON.parse(JSON.stringify(state.params));
@@ -268,6 +271,18 @@ var PRESETS = [
 ];
 
 // ── HELPERS
+function loadGoogleFont(fontName) {
+  if (!fontName || fontName === 'Outfit' || fontName === 'sans-serif') return;
+  var id = 'gfont_' + fontName.replace(/\s+/g, '_');
+  if (!document.getElementById(id)) {
+    var link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fontName) + ':wght@400;700;800&display=swap';
+    document.head.appendChild(link);
+  }
+}
+function escapeHTML(str){ return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function ci(i){ return state.colors[((i%state.colors.length)+state.colors.length)%state.colors.length]||'#fff'; }
 function gc(k){ var idx=state.params[k+'Color']||0; return state.colors[Math.min(idx,state.colors.length-1)]||'#fff'; }
 function ts(body){ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'+body+'</svg>'; }
@@ -935,16 +950,22 @@ function genEmblem(w, h, p){
   }
   r += '</g>';
   var centerSz = rMax * (p.emblemCenterSize || 30) / 100 * 2;
-  var sx = cx - centerSz / 2;
-  var sy = cy - centerSz / 2;
-  r += '<rect x="' + sx + '" y="' + sy + '" width="' + centerSz + '" height="' + centerSz + '" fill="' + cFg1 + '"/>';
-  r += '<g transform="translate(' + cx + ', ' + cy + ') scale(' + (centerSz / 100) + ')">';
-  r += '<path d="M 0,-30 A 30,30 0 0,0 0,30" fill="none" stroke="' + cFg2 + '" stroke-width="10" stroke-linecap="round"/>';
-  r += '<path d="M 0,-15 A 15,15 0 0,0 0,15" fill="none" stroke="' + cFg2 + '" stroke-width="10" stroke-linecap="round"/>';
-  r += '<circle cx="22" cy="-20" r="16" fill="' + cFg2 + '"/>';
-  r += '<circle cx="22" cy="-20" r="6" fill="' + cFg1 + '"/>';
-  r += '<circle cx="22" cy="20" r="16" fill="' + cFg2 + '"/>';
-  r += '<circle cx="22" cy="20" r="6" fill="' + cFg1 + '"/>';
+  var rot = p.emblemCenterRotate || 0;
+  if(typeof loadGoogleFont === 'function' && p.emblemFont){
+    loadGoogleFont(p.emblemFont);
+  }
+  r += '<g transform="translate(' + cx + ', ' + cy + ') rotate(' + rot + ') scale(' + (centerSz / 100) + ')">';
+  r += '<rect x="-50" y="-50" width="100" height="100" fill="' + cFg1 + '"/>';
+  var text = p.emblemText || 'WNYO';
+  var font = p.emblemFont || 'Outfit';
+  var cText = cFg2;
+  var chars = text.split('');
+  while(chars.length < 4) chars.push('');
+  var fontStyle = 'font-family:\'' + font + '\', sans-serif; font-weight:800; font-size:32px;';
+  r += '<text x="-25" y="-25" text-anchor="middle" dominant-baseline="central" fill="' + cText + '" style="' + fontStyle + '">' + escapeHTML(chars[0]) + '</text>';
+  r += '<text x="25" y="-25" text-anchor="middle" dominant-baseline="central" fill="' + cText + '" style="' + fontStyle + '">' + escapeHTML(chars[1]) + '</text>';
+  r += '<text x="-25" y="25" text-anchor="middle" dominant-baseline="central" fill="' + cText + '" style="' + fontStyle + '">' + escapeHTML(chars[2]) + '</text>';
+  r += '<text x="25" y="25" text-anchor="middle" dominant-baseline="central" fill="' + cText + '" style="' + fontStyle + '">' + escapeHTML(chars[3]) + '</text>';
   r += '</g>';
   r += '</g>';
   return r;
@@ -1173,6 +1194,69 @@ function buildEmblemUI(cont, p){
   sliderE('emblemRays','Ray Count',8,36,2);
   sliderE('emblemCloverSize','Clover Size %',40,90,1);
   sliderE('emblemCenterSize','Center Square %',15,50,1);
+  sliderE('emblemCenterRotate','Center Rotate',0,360,1);
+
+  var rowText = document.createElement('div');
+  rowText.className = 'ctrl-row';
+  rowText.style.flexDirection = 'column';
+  rowText.style.alignItems = 'flex-start';
+  rowText.style.gap = '4px';
+  var lblText = document.createElement('div');
+  lblText.className = 'ctrl-label';
+  lblText.textContent = 'Center Text (max 4 chars)';
+  var inpText = document.createElement('input');
+  inpText.type = 'text';
+  inpText.className = 'select-ctrl';
+  inpText.style.width = '100%';
+  inpText.style.cursor = 'text';
+  inpText.maxLength = 4;
+  inpText.value = p.emblemText || 'WNYO';
+  inpText.oninput = function(e){
+    p.emblemText = e.target.value;
+    render();
+  };
+  rowText.appendChild(lblText);
+  rowText.appendChild(inpText);
+  cont.appendChild(rowText);
+
+  var rowFont = document.createElement('div');
+  rowFont.className = 'ctrl-row';
+  rowFont.style.flexDirection = 'column';
+  rowFont.style.alignItems = 'flex-start';
+  rowFont.style.gap = '4px';
+  var lblFont = document.createElement('div');
+  lblFont.className = 'ctrl-label';
+  lblFont.textContent = 'Google Font';
+  var selFont = document.createElement('select');
+  selFont.className = 'select-ctrl';
+  var fonts = [
+    {v:'Outfit', l:'Outfit (Default)'},
+    {v:'Inter', l:'Inter'},
+    {v:'Montserrat', l:'Montserrat'},
+    {v:'Playfair Display', l:'Playfair Display'},
+    {v:'Fredoka', l:'Fredoka (Rounded)'},
+    {v:'Rowdies', l:'Rowdies (Bold)'},
+    {v:'Pacifico', l:'Pacifico (Cursive)'},
+    {v:'Anton', l:'Anton (Compact)'},
+    {v:'Bungee', l:'Bungee (Display)'}
+  ];
+  fonts.forEach(function(f){
+    var opt = document.createElement('option');
+    opt.value = f.v;
+    opt.textContent = f.l;
+    if(p.emblemFont === f.v) opt.selected = true;
+    selFont.appendChild(opt);
+  });
+  selFont.onchange = function(e){
+    p.emblemFont = e.target.value;
+    if (typeof loadGoogleFont === 'function') {
+      loadGoogleFont(p.emblemFont);
+    }
+    render();
+  };
+  rowFont.appendChild(lblFont);
+  rowFont.appendChild(selFont);
+  cont.appendChild(rowFont);
 
   var rowSides = document.createElement('div');
   rowSides.className = 'ctrl-row';
@@ -1697,6 +1781,10 @@ function randomizeParams(){
     p.emblemCloverSize = Math.floor(Math.random()*50)+40;
     p.emblemCenterSize = Math.floor(Math.random()*35)+15;
     p.emblemSides = Math.random() > 0.3;
+    p.emblemCenterRotate = Math.floor(Math.random()*360);
+    var fonts = ['Outfit', 'Inter', 'Montserrat', 'Playfair Display', 'Fredoka', 'Rowdies', 'Pacifico', 'Anton', 'Bungee'];
+    p.emblemFont = fonts[Math.floor(Math.random()*fonts.length)];
+    if(typeof loadGoogleFont === 'function') loadGoogleFont(p.emblemFont);
   }
   Object.keys(p).filter(function(k){return k.endsWith('Color');}).forEach(function(k){
     p[k] = Math.floor(Math.random()*state.colors.length);
