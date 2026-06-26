@@ -184,7 +184,10 @@ var state = {
     plaidDensityH:5, plaidDensityV:5,
     diamondSize:50, dotRadius:20, dotSpacing:60, dotRows:'square',
     wovenCount:6, wovenGap:4, blockRows:3, blockCols:3,
-    bgColor:0, fg1Color:1, fg2Color:2, fg3Color:3, fg4Color:4, fg5Color:5
+    bgColor:0, fg1Color:1, fg2Color:2, fg3Color:3, fg4Color:4, fg5Color:5,
+    varGridCols:[2,1,3,1,2,1,3],
+    varGridRows:[1,2,1,3,1,2],
+    varGridColors:2
   }
 };
 
@@ -201,7 +204,8 @@ var PATTERNS = [
   {id:'grid',       label:'Grid',      icon:tGrid},
   {id:'mixed',      label:'Mixed',     icon:tMixed},
   {id:'stripes-mix',label:'Var Strip', icon:tVarStripes},
-  {id:'halfcircle', label:'Scallop',   icon:tScallop}
+  {id:'halfcircle', label:'Scallop',   icon:tScallop},
+  {id:'vargrid',    label:'Var Grid',  icon:tVarGrid}
 ];
 var ROLES = {
   'stripes-v':[{k:'bg',l:'Background'},{k:'fg1',l:'Stripe 1'},{k:'fg2',l:'Stripe 2'},{k:'fg3',l:'Stripe 3'},{k:'fg4',l:'Stripe 4'}],
@@ -215,7 +219,8 @@ var ROLES = {
   'grid':[{k:'bg',l:'Cell 1'},{k:'fg1',l:'Cell 2'},{k:'fg2',l:'Cell 3'},{k:'fg3',l:'Cell 4'},{k:'fg4',l:'Lines'}],
   'mixed':[{k:'bg',l:'BG'},{k:'fg1',l:'Color 1'},{k:'fg2',l:'Color 2'},{k:'fg3',l:'Color 3'},{k:'fg4',l:'Color 4'},{k:'fg5',l:'Color 5'}],
   'stripes-mix':[{k:'bg',l:'BG'},{k:'fg1',l:'Stripe 1'},{k:'fg2',l:'Stripe 2'},{k:'fg3',l:'Stripe 3'},{k:'fg4',l:'Stripe 4'},{k:'fg5',l:'Stripe 5'}],
-  'halfcircle':[{k:'bg',l:'Background'},{k:'fg1',l:'Circle 1'},{k:'fg2',l:'Circle 2'}]
+  'halfcircle':[{k:'bg',l:'Background'},{k:'fg1',l:'Circle 1'},{k:'fg2',l:'Circle 2'}],
+  'vargrid':[{k:'bg',l:'Color 1'},{k:'fg1',l:'Color 2'},{k:'fg2',l:'Color 3'},{k:'fg3',l:'Color 4'}]
 };
 var PRESETS = [
   {name:'Dicaphe',   colors:['#1e0c02','#0d8018','#1a42cc','#c400ca','#f03525','#fff0a8','#ff0f7e','#ffbe00']},
@@ -248,6 +253,21 @@ function tGrid(){var r='';var s=16;var seq=[0,1,2,3,1,2,3,0,2,3,0,1,3,0,1,2];for
 function tMixed(){var r='<rect width="32" height="32" fill="'+ci(0)+'"/><rect x="32" y="0" width="32" height="32" fill="'+ci(1)+'"/><rect x="0" y="32" width="32" height="32" fill="'+ci(2)+'"/>';for(var y=0;y<4;y++)for(var x=0;x<4;x++)r+='<rect x="'+(32+x*8)+'" y="'+(32+y*8)+'" width="8" height="8" fill="'+ci((x+y)%2===0?3:4)+'"/>';return ts(r)}
 function tVarStripes(){var r='';var x=0;var ws=[6,12,6,18,6,16];for(var i=0;i<ws.length;i++){r+='<rect x="'+x+'" y="0" width="'+ws[i]+'" height="64" fill="'+ci(i)+'"/>';x+=ws[i];}return ts(r)}
 function tScallop(){var r='<rect width="64" height="64" fill="'+ci(0)+'"/>';for(var row=-1;row<5;row++)for(var col=-1;col<5;col++){var off=row%2===0?0:12;r+='<circle cx="'+(col*14+off)+'" cy="'+(row*12)+'" r="11" fill="'+ci((row+col)%2===0?1:2)+'"/>';}return ts(r)}
+function tVarGrid(){
+  var cws=[2,1,3,1,2,1,3],rhs=[1,2,1,3,1,2];
+  var tc=cws.reduce(function(a,b){return a+b;},0),tr=rhs.reduce(function(a,b){return a+b;},0);
+  var r='',py=0;
+  for(var row=0;row<rhs.length;row++){
+    var rh=Math.round(rhs[row]/tr*64),px=0;
+    for(var col=0;col<cws.length;col++){
+      var cw=Math.round(cws[col]/tc*64);
+      r+='<rect x="'+px+'" y="'+py+'" width="'+cw+'" height="'+rh+'" fill="'+ci((row+col)%2)+'"/>';
+      px+=cw;
+    }
+    py+=rh;
+  }
+  return ts(r);
+}
 
 // ── GENERATORS
 function genSV(w,h,p){
@@ -423,9 +443,32 @@ function genScallop(w,h,p){
   }
   return r;
 }
+function genVarGrid(w,h,p){
+  var cws=p.varGridCols||[2,1,3,1,2,1,3];
+  var rhs=p.varGridRows||[1,2,1,3,1,2];
+  var nc=Math.min(p.varGridColors||2,state.colors.length);
+  var uc=cols(nc);
+  var tc=cws.reduce(function(a,b){return a+b;},0);
+  var tr=rhs.reduce(function(a,b){return a+b;},0);
+  var r='<rect width="'+w+'" height="'+h+'" fill="'+uc[0]+'"/>';
+  var cumY=0;
+  for(var row=0;row<rhs.length;row++){
+    var y0=Math.round(cumY/tr*h);
+    var y1=Math.round((cumY+rhs[row])/tr*h);
+    var cumX=0;
+    for(var col=0;col<cws.length;col++){
+      var x0=Math.round(cumX/tc*w);
+      var x1=Math.round((cumX+cws[col])/tc*w);
+      r+='<rect x="'+x0+'" y="'+y0+'" width="'+(x1-x0)+'" height="'+(y1-y0)+'" fill="'+uc[((row+col)%nc+nc)%nc]+'"/>';
+      cumX+=cws[col];
+    }
+    cumY+=rhs[row];
+  }
+  return r;
+}
 function genPattern(){
   var w=state.canvasW,h=state.canvasH,p=state.params;
-  var map={'stripes-v':genSV,'stripes-h':genSH,'stripes-d':genSD,'plaid':genPlaid,'checker':genChecker,'diamond':genDiamond,'dots':genDots,'woven':genWoven,'grid':genGrid,'mixed':genMixed,'stripes-mix':genVarStripes,'halfcircle':genScallop};
+  var map={'stripes-v':genSV,'stripes-h':genSH,'stripes-d':genSD,'plaid':genPlaid,'checker':genChecker,'diamond':genDiamond,'dots':genDots,'woven':genWoven,'grid':genGrid,'mixed':genMixed,'stripes-mix':genVarStripes,'halfcircle':genScallop,'vargrid':genVarGrid};
   return (map[state.pattern]||genSV)(w,h,p);
 }
 
@@ -542,6 +585,46 @@ function buildParams(){
   if(pt==='dots')select('dotRows','Layout',[{v:'square',l:'Grid'},{v:'offset',l:'Honeycomb offset'}]);
   if(pt==='woven'){slider('wovenCount','Bands',2,16,1);slider('wovenGap','Gap',0,12,1);}
   if(pt==='mixed'){slider('blockRows','Rows',1,5,1);slider('blockCols','Cols',1,5,1);}
+  if(pt==='vargrid') buildVarGridUI(cont,p);
+}
+function buildVarGridUI(cont,p){
+  // ── # Colors
+  var ncRow=document.createElement('div');ncRow.className='ctrl-row';
+  var ncLbl=document.createElement('div');ncLbl.className='ctrl-label';ncLbl.textContent='# Colors';
+  var ncVal=document.createElement('div');ncVal.className='ctrl-value';ncVal.id='v_vgc';ncVal.textContent=p.varGridColors||2;
+  ncRow.appendChild(ncLbl);ncRow.appendChild(ncVal);cont.appendChild(ncRow);
+  var ncSl=document.createElement('input');ncSl.type='range';ncSl.min=2;ncSl.max=Math.min(state.colors.length,4);ncSl.step=1;ncSl.value=p.varGridColors||2;
+  ncSl.oninput=function(e){p.varGridColors=parseInt(e.target.value);document.getElementById('v_vgc').textContent=p.varGridColors;render();};
+  cont.appendChild(ncSl);
+  // ── helper to build a column or row band editor
+  function bandEditor(label, arr, addLabel, isCol){
+    var wrap=document.createElement('div');wrap.style.marginBottom='14px';
+    // Header row
+    var hdr=document.createElement('div');hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:6px';
+    var hl=document.createElement('div');hl.className='panel-title';hl.style.margin='0';hl.textContent=label;
+    var btns=document.createElement('div');btns.style.cssText='display:flex;gap:4px';
+    var addBtn=document.createElement('button');addBtn.className='zoom-btn';addBtn.textContent='+';addBtn.style.fontSize='16px';
+    addBtn.onclick=function(){if(arr.length<12){arr.push(1);buildParams();render();};};
+    var delBtn=document.createElement('button');delBtn.className='zoom-btn';delBtn.textContent='-';delBtn.style.fontSize='16px';
+    delBtn.onclick=function(){if(arr.length>2){arr.pop();buildParams();render();};};
+    btns.appendChild(addBtn);btns.appendChild(delBtn);
+    hdr.appendChild(hl);hdr.appendChild(btns);wrap.appendChild(hdr);
+    // One row per band
+    arr.forEach(function(val,i){
+      var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:6px;margin-bottom:4px';
+      var lbl=document.createElement('div');lbl.style.cssText='font-size:10px;color:var(--text2);width:20px;flex-shrink:0;text-align:right;';lbl.textContent=(isCol?'C':'R')+(i+1);
+      var sl=document.createElement('input');sl.type='range';sl.min=1;sl.max=8;sl.step=1;sl.value=val;sl.style.cssText='flex:1;margin-bottom:0';
+      var vl=document.createElement('div');vl.style.cssText='font-size:11px;color:var(--accent2);font-weight:700;width:14px;text-align:right;';vl.textContent=val;
+      // color preview square showing what color this band starts with
+      var dot=document.createElement('div');dot.style.cssText='width:10px;height:10px;border-radius:2px;flex-shrink:0;background:'+state.colors[i%state.colors.length];
+      sl.oninput=(function(idx){return function(e){arr[idx]=parseInt(e.target.value);e.target.nextSibling.textContent=arr[idx];render();};})(i);
+      row.appendChild(lbl);row.appendChild(sl);row.appendChild(vl);row.appendChild(dot);
+      wrap.appendChild(row);
+    });
+    cont.appendChild(wrap);
+  }
+  bandEditor('Columns (widths)', p.varGridCols, '+ Col', true);
+  bandEditor('Rows (heights)',   p.varGridRows,  '+ Row', false);
 }
 function buildPresets(){
   var cont=document.getElementById('presetPalettes');cont.innerHTML='';
