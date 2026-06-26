@@ -152,6 +152,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <div class="panel-section">
         <div class="panel-title">Palette</div>
         <div class="palette-grid" id="paletteGrid"></div>
+        <button class="btn btn-secondary" onclick="saveCustomPalette()" style="width:100%;margin-top:10px;justify-content:center;font-size:12px;">+ Save Current Palette</button>
       </div>
       <div class="panel-section">
         <div class="panel-title">Color Roles &mdash; click dot to cycle</div>
@@ -165,6 +166,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <div class="panel-section">
         <div class="panel-title">Color Presets</div>
         <div class="preset-palettes" id="presetPalettes"></div>
+      </div>
+      <div class="panel-section" style="border-top:1px solid var(--border);padding-top:12px;">
+        <div class="panel-title">My Saved Palettes</div>
+        <div class="preset-palettes" id="customPalettes"></div>
       </div>
     </div>
   </div>
@@ -1190,6 +1195,34 @@ function buildBadgeUI(cont,p){
     bandEditorB('Rows (heights)',p.varGridRows,false);
   }
 }
+var customPalettes = [];
+function loadCustomPalettes(){
+  try {
+    var saved = localStorage.getItem('pattern_studio_custom_palettes');
+    customPalettes = saved ? JSON.parse(saved) : [];
+  } catch(e) {
+    customPalettes = [];
+  }
+}
+function saveCustomPalette(){
+  var name = prompt("Enter a name for your custom palette:", "My Palette " + (customPalettes.length + 1));
+  if(!name) return;
+  name = name.trim();
+  if(!name) return;
+  customPalettes.push({name: name, colors: state.colors.slice()});
+  localStorage.setItem('pattern_studio_custom_palettes', JSON.stringify(customPalettes));
+  buildPresets();
+  showToast('\u2713', 'Palette "' + name + '" saved!');
+}
+function deleteCustomPalette(idx, e){
+  if(e) e.stopPropagation();
+  if(confirm("Delete this palette?")){
+    customPalettes.splice(idx, 1);
+    localStorage.setItem('pattern_studio_custom_palettes', JSON.stringify(customPalettes));
+    buildPresets();
+    showToast('\u2713', 'Palette deleted');
+  }
+}
 function buildPresets(){
   var cont=document.getElementById('presetPalettes');cont.innerHTML='';
   PRESETS.forEach(function(preset){
@@ -1204,6 +1237,38 @@ function buildPresets(){
     };
     cont.appendChild(div);
   });
+  var customCont=document.getElementById('customPalettes');
+  if(customCont) {
+    customCont.innerHTML='';
+    if(customPalettes.length === 0){
+      var placeholder = document.createElement('div');
+      placeholder.style.cssText = 'font-size:11px;color:var(--text2);font-style:italic;padding:8px 0;';
+      placeholder.textContent = 'No custom palettes saved yet.';
+      customCont.appendChild(placeholder);
+    } else {
+      customPalettes.forEach(function(preset, idx){
+        var div=document.createElement('div');div.className='preset-palette';
+        div.style.position = 'relative';
+        var sw=preset.colors.map(function(clr){return '<div class="preset-swatch" style="background:'+clr+'"></div>';}).join('');
+        div.innerHTML=sw+'<div class="preset-name" style="padding-right:20px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">'+preset.name+'</div>';
+        var delBtn = document.createElement('button');
+        delBtn.className = 'zoom-btn';
+        delBtn.innerHTML = '&times;';
+        delBtn.style.cssText = 'position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text2);display:none;border:none;background:none;cursor:pointer;';
+        div.onmouseenter = function(){ delBtn.style.display = 'block'; };
+        div.onmouseleave = function(){ delBtn.style.display = 'none'; };
+        delBtn.onclick = function(e){ deleteCustomPalette(idx, e); };
+        div.appendChild(delBtn);
+        div.onclick=function(){
+          state.colors=preset.colors.slice();var ri=0;
+          Object.keys(state.params).filter(function(k){return k.endsWith('Color');}).forEach(function(k){state.params[k]=ri%state.colors.length;ri++;});
+          buildPalette();buildColorRoles();render();
+          document.querySelectorAll('.preset-palette').forEach(function(d){d.classList.remove('active');});div.classList.add('active');
+        };
+        customCont.appendChild(div);
+      });
+    }
+  }
 }
 function toggleTilePreview(){
   state.tiledPreview = !state.tiledPreview;
@@ -1347,6 +1412,7 @@ document.getElementById('canvasArea').addEventListener('wheel',function(e){e.pre
 
 // ── INIT
 window.addEventListener('load',function(){
+  loadCustomPalettes();
   buildPatternGrid();buildPalette();buildColorRoles();buildParams();buildPresets();
   resetZoom();render();setTimeout(resetZoom,120);
 });
