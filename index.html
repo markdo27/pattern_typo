@@ -336,7 +336,7 @@ function tSplitH(){
     for(var col=-1; col<6; col++) {
       var cx = col*s + ((row&1)?s/2:0);
       var cy = row*s/2;
-      var useDia = ((row + col) % 2 + 2) % 2 === 0;
+      var useDia = (row % 2 + 2) % 2 === 0;
       r += '<polygon points="'+cx+','+(cy-s/2)+' '+(cx+s/2)+','+cy+' '+cx+','+(cy+s/2)+' '+(cx-s/2)+','+cy+'" fill="'+(useDia?ci(1):ci(5))+'"/>';
     }
   }
@@ -425,7 +425,7 @@ function genDiamond(w,h,p){
   for(var row=-2;row<rows;row++)for(var col=-2;col<c2;col++){
     var cx=col*s+((row&1)?s/2:0);
     var cy=row*s/2;
-    var ci2=((row+col)%nc+nc*4)%nc;
+    var ci2=(nc===2)?(row%2+2)%2:((row+col)%nc+nc*4)%nc;
     r+='<polygon points="'+cx+','+(cy-s/2)+' '+(cx+s/2)+','+cy+' '+cx+','+(cy+s/2)+' '+(cx-s/2)+','+cy+'" fill="'+uc[ci2]+'"/>';
   }
   return r;
@@ -757,7 +757,7 @@ function genSplitH(w,h,p){
     for(var col=-2;col<c2;col++){
       var cx=col*s+((row&1)?s/2:0);
       var cy=row*s/2;
-      var useDia = ((row + col) % 2 + 2) % 2 === 0;
+      var useDia = (row % 2 + 2) % 2 === 0;
       r+='<polygon points="'+cx+','+(cy-s/2)+' '+(cx+s/2)+','+cy+' '+cx+','+(cy+s/2)+' '+(cx-s/2)+','+cy+'" fill="'+(useDia?diaColor:bgTop)+'"/>';
     }
   }
