@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Pattern Studio – Grid Play Creator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -14,16 +14,16 @@
   --text:#f0f0ff;--text2:#9090b8;--accent:#ff6b6b;--accent2:#ffd93d;
   --radius:12px;--radius-sm:8px;--shadow:0 8px 32px rgba(0,0,0,.4);
 }
-body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;overflow:hidden;height:100vh}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;overflow:hidden;height:100vh}
 /* HEADER */
 header{display:flex;align-items:center;gap:16px;padding:0 20px;height:56px;background:var(--surface);border-bottom:1px solid var(--border2);flex-shrink:0;z-index:10}
 .logo{font-size:20px;font-weight:800;background:linear-gradient(135deg,#ff6b6b,#ffd93d,#6bcbff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.5px;flex-shrink:0}
 .sep{width:1px;height:28px;background:var(--border2);flex-shrink:0}
 .ctrl-group{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
 header label{font-size:12px;color:var(--text2);white-space:nowrap}
-header input[type=number]{width:68px;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Outfit',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+header input[type=number]{width:68px;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
 header input[type=number]:focus{border-color:var(--accent2)}
-.btn{padding:7px 16px;border-radius:var(--radius-sm);border:none;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.btn{padding:7px 16px;border-radius:var(--radius-sm);border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
 .btn-primary{background:linear-gradient(135deg,#ff6b6b,#ff8c00);color:#fff;box-shadow:0 4px 12px rgba(255,107,107,.35)}
 .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(255,107,107,.45)}
 .btn-secondary{background:var(--surface3);color:var(--text);border:1px solid var(--border2)}
@@ -49,7 +49,7 @@ header .header-actions{display:flex;gap:8px}
 #patternSVG{display:block}
 .canvas-hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--text2);background:rgba(15,15,26,.7);padding:4px 12px;border-radius:20px;pointer-events:none;backdrop-filter:blur(6px)}
 .zoom-display{position:absolute;top:12px;right:12px;font-size:11px;color:var(--text2);background:rgba(15,15,26,.7);padding:4px 10px;border-radius:20px;backdrop-filter:blur(6px);display:flex;gap:6px;align-items:center}
-.zoom-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:15px;padding:0 2px;transition:color .15s;font-family:'Outfit',sans-serif;line-height:1}
+.zoom-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:15px;padding:0 2px;transition:color .15s;font-family:'Inter',sans-serif;line-height:1}
 .zoom-btn:hover{color:var(--accent2)}
 /* RIGHT */
 .panel-right{width:260px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
@@ -81,7 +81,7 @@ header .header-actions{display:flex;gap:8px}
 .ctrl-value{font-size:12px;color:var(--accent2);font-weight:700;min-width:28px;text-align:right}
 input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--surface3);outline:none;cursor:pointer;margin-bottom:12px;display:block}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent2);cursor:pointer;box-shadow:0 0 6px rgba(255,217,61,.4)}
-.select-ctrl{background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Outfit',sans-serif;font-size:12px;padding:5px 8px;outline:none;cursor:pointer;width:100%;margin-bottom:12px;display:block}
+.select-ctrl{background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Inter',sans-serif;font-size:12px;padding:5px 8px;outline:none;cursor:pointer;width:100%;margin-bottom:12px;display:block}
 .select-ctrl:focus{border-color:var(--accent2)}
 /* ROLES */
 .color-assignment{display:flex;flex-direction:column;gap:5px}
@@ -209,7 +209,7 @@ var state = {
     emblemCloverSize:70,
     emblemCenterSize:30,
     emblemText:'WNYO',
-    emblemFont:'Outfit',
+    emblemFont:'Inter',
     emblemCenterRotate:0,
     emblemCornerText:'Y*nW',
     emblemCheckerCols:2,
@@ -274,17 +274,6 @@ var PRESETS = [
 ];
 
 // ── HELPERS
-function loadGoogleFont(fontName) {
-  if (!fontName || fontName === 'Outfit' || fontName === 'sans-serif') return;
-  var id = 'gfont_' + fontName.replace(/\s+/g, '_');
-  if (!document.getElementById(id)) {
-    var link = document.createElement('link');
-    link.id = id;
-    link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fontName) + ':wght@400;700;800&display=swap';
-    document.head.appendChild(link);
-  }
-}
 function escapeHTML(str){ return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function ci(i){ return state.colors[((i%state.colors.length)+state.colors.length)%state.colors.length]||'#fff'; }
 function gc(k){ var idx=state.params[k+'Color']||0; return state.colors[Math.min(idx,state.colors.length-1)]||'#fff'; }
@@ -967,13 +956,10 @@ function genEmblem(w, h, p){
   r += '</g>';
   var centerSz = rMax * (p.emblemCenterSize || 30) / 100 * 2;
   var rot = p.emblemCenterRotate || 0;
-  if(typeof loadGoogleFont === 'function' && p.emblemFont){
-    loadGoogleFont(p.emblemFont);
-  }
   r += '<g transform="translate(' + cx + ', ' + cy + ') rotate(' + rot + ') scale(' + (centerSz / 100) + ')">';
   r += '<rect x="-50" y="-50" width="100" height="100" fill="' + cFg1 + '"/>';
   var text = p.emblemText || 'WNYO';
-  var font = p.emblemFont || 'Outfit';
+  var font = 'Inter';
   var cText = cFg2;
   var chars = text.split('');
   while(chars.length < 4) chars.push('');
@@ -1260,44 +1246,7 @@ function buildEmblemUI(cont, p){
   rowText.appendChild(inpText);
   cont.appendChild(rowText);
 
-  var rowFont = document.createElement('div');
-  rowFont.className = 'ctrl-row';
-  rowFont.style.flexDirection = 'column';
-  rowFont.style.alignItems = 'flex-start';
-  rowFont.style.gap = '4px';
-  var lblFont = document.createElement('div');
-  lblFont.className = 'ctrl-label';
-  lblFont.textContent = 'Google Font';
-  var selFont = document.createElement('select');
-  selFont.className = 'select-ctrl';
-  var fonts = [
-    {v:'Outfit', l:'Outfit (Default)'},
-    {v:'Inter', l:'Inter'},
-    {v:'Montserrat', l:'Montserrat'},
-    {v:'Playfair Display', l:'Playfair Display'},
-    {v:'Fredoka', l:'Fredoka (Rounded)'},
-    {v:'Rowdies', l:'Rowdies (Bold)'},
-    {v:'Pacifico', l:'Pacifico (Cursive)'},
-    {v:'Anton', l:'Anton (Compact)'},
-    {v:'Bungee', l:'Bungee (Display)'}
-  ];
-  fonts.forEach(function(f){
-    var opt = document.createElement('option');
-    opt.value = f.v;
-    opt.textContent = f.l;
-    if(p.emblemFont === f.v) opt.selected = true;
-    selFont.appendChild(opt);
-  });
-  selFont.onchange = function(e){
-    p.emblemFont = e.target.value;
-    if (typeof loadGoogleFont === 'function') {
-      loadGoogleFont(p.emblemFont);
-    }
-    render();
-  };
-  rowFont.appendChild(lblFont);
-  rowFont.appendChild(selFont);
-  cont.appendChild(rowFont);
+  // Locked to Inter font (no dropdown selector needed)
 
   var rowSides = document.createElement('div');
   rowSides.className = 'ctrl-row';
@@ -1823,9 +1772,7 @@ function randomizeParams(){
     p.emblemCenterSize = Math.floor(Math.random()*35)+15;
     p.emblemSides = Math.random() > 0.3;
     p.emblemCenterRotate = Math.floor(Math.random()*360);
-    var fonts = ['Outfit', 'Inter', 'Montserrat', 'Playfair Display', 'Fredoka', 'Rowdies', 'Pacifico', 'Anton', 'Bungee'];
-    p.emblemFont = fonts[Math.floor(Math.random()*fonts.length)];
-    if(typeof loadGoogleFont === 'function') loadGoogleFont(p.emblemFont);
+    p.emblemFont = 'Inter';
     p.emblemCheckerCols = Math.floor(Math.random()*4)+1;
     p.emblemCheckerRows = Math.floor(Math.random()*16)+6;
     // Generate randomized corner texts
