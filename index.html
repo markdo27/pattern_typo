@@ -187,7 +187,8 @@ var state = {
     bgColor:0, fg1Color:1, fg2Color:2, fg3Color:3, fg4Color:4, fg5Color:5,
     varGridCols:[2,1,3,1,2,1,3],
     varGridRows:[1,2,1,3,1,2],
-    varGridColors:2
+    varGridColors:2,
+    badgeType:'star', badgeSpikes:12, badgeOuterR:80, badgeInnerRatio:45
   }
 };
 
@@ -205,7 +206,8 @@ var PATTERNS = [
   {id:'mixed',      label:'Mixed',     icon:tMixed},
   {id:'stripes-mix',label:'Var Strip', icon:tVarStripes},
   {id:'halfcircle', label:'Scallop',   icon:tScallop},
-  {id:'vargrid',    label:'Var Grid',  icon:tVarGrid}
+  {id:'vargrid',    label:'Var Grid',  icon:tVarGrid},
+  {id:'badge',      label:'Badge',     icon:tBadge}
 ];
 var ROLES = {
   'stripes-v':[{k:'bg',l:'Background'},{k:'fg1',l:'Stripe 1'},{k:'fg2',l:'Stripe 2'},{k:'fg3',l:'Stripe 3'},{k:'fg4',l:'Stripe 4'}],
@@ -220,7 +222,8 @@ var ROLES = {
   'mixed':[{k:'bg',l:'BG'},{k:'fg1',l:'Color 1'},{k:'fg2',l:'Color 2'},{k:'fg3',l:'Color 3'},{k:'fg4',l:'Color 4'},{k:'fg5',l:'Color 5'}],
   'stripes-mix':[{k:'bg',l:'BG'},{k:'fg1',l:'Stripe 1'},{k:'fg2',l:'Stripe 2'},{k:'fg3',l:'Stripe 3'},{k:'fg4',l:'Stripe 4'},{k:'fg5',l:'Stripe 5'}],
   'halfcircle':[{k:'bg',l:'Background'},{k:'fg1',l:'Circle 1'},{k:'fg2',l:'Circle 2'}],
-  'vargrid':[{k:'bg',l:'Color 1'},{k:'fg1',l:'Color 2'},{k:'fg2',l:'Color 3'},{k:'fg3',l:'Color 4'}]
+  'vargrid':[{k:'bg',l:'Color 1'},{k:'fg1',l:'Color 2'},{k:'fg2',l:'Color 3'},{k:'fg3',l:'Color 4'}],
+  'badge':[{k:'bg',l:'Outer Ring'},{k:'fg1',l:'Plate Face'},{k:'fg2',l:'Shape Color'}]
 };
 var PRESETS = [
   {name:'Dicaphe',   colors:['#1e0c02','#0d8018','#1a42cc','#c400ca','#f03525','#fff0a8','#ff0f7e','#ffbe00']},
@@ -266,6 +269,14 @@ function tVarGrid(){
     }
     py+=rh;
   }
+  return ts(r);
+}
+function tBadge(){
+  var r='<rect width="64" height="64" fill="'+ci(0)+'"/>';
+  r+='<circle cx="32" cy="32" r="28" fill="'+ci(1)+'"/>';
+  var pts='';var n=10;
+  for(var i=0;i<n*2;i++){var a=i*Math.PI/n-Math.PI/2;var rad=i%2===0?22:11;pts+=(32+rad*Math.cos(a)).toFixed(1)+','+(32+rad*Math.sin(a)).toFixed(1)+' ';}
+  r+='<polygon points="'+pts+'" fill="'+ci(2)+'"/>';
   return ts(r);
 }
 
@@ -466,9 +477,74 @@ function genVarGrid(w,h,p){
   }
   return r;
 }
+// ── BADGE SHAPE HELPERS
+function _xy(cx,cy,r,a){return {x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};}
+function _f(v){return v.toFixed(2);}
+function makeStarPath(cx,cy,oR,iR,n){
+  var d='',step=Math.PI/n;
+  for(var i=0;i<n*2;i++){var a=i*step-Math.PI/2;var r2=i%2===0?oR:iR;d+=(i===0?'M ':'L ')+_f(cx+r2*Math.cos(a))+' '+_f(cy+r2*Math.sin(a))+' ';}
+  return d+'Z';
+}
+function makeSunPath(cx,cy,oR,iR,n){
+  var d='',full=Math.PI*2/n;
+  for(var i=0;i<n;i++){
+    var a1=i*full-Math.PI/2,a2=a1+full/2,a3=a1+full;
+    var v1=_xy(cx,cy,iR,a1),tip=_xy(cx,cy,oR,a2),v2=_xy(cx,cy,iR,a3);
+    var c1=_xy(cx,cy,oR*0.6,a1+full*0.22),c2=_xy(cx,cy,oR*0.6,a2-full*0.22);
+    var c3=_xy(cx,cy,oR*0.6,a2+full*0.22),c4=_xy(cx,cy,oR*0.6,a3-full*0.22);
+    if(i===0)d='M '+_f(v1.x)+' '+_f(v1.y);
+    d+=' C '+_f(c1.x)+' '+_f(c1.y)+' '+_f(c2.x)+' '+_f(c2.y)+' '+_f(tip.x)+' '+_f(tip.y);
+    d+=' C '+_f(c3.x)+' '+_f(c3.y)+' '+_f(c4.x)+' '+_f(c4.y)+' '+_f(v2.x)+' '+_f(v2.y);
+  }
+  return d+' Z';
+}
+function makeCogPath(cx,cy,oR,iR,n){
+  var d='',full=Math.PI*2/n,tw=full*0.38;
+  for(var i=0;i<n;i++){
+    var a=i*full-Math.PI/2;
+    var a_ts=a-tw/2,a_te=a+tw/2;
+    var v1=_xy(cx,cy,iR,a-full/2),t1=_xy(cx,cy,iR,a_ts);
+    var o1=_xy(cx,cy,oR,a_ts),o2=_xy(cx,cy,oR,a_te),t2=_xy(cx,cy,iR,a_te);
+    if(i===0)d='M '+_f(v1.x)+' '+_f(v1.y);
+    d+=' L '+_f(t1.x)+' '+_f(t1.y)+' L '+_f(o1.x)+' '+_f(o1.y);
+    d+=' L '+_f(o2.x)+' '+_f(o2.y)+' L '+_f(t2.x)+' '+_f(t2.y);
+  }
+  return d+' Z';
+}
+function makeWavyPath(cx,cy,oR,iR,n){
+  // Wavy blob: smooth quadratic bezier between outer and inner points
+  var pts=[],num=n*2,step=Math.PI*2/num;
+  for(var i=0;i<num;i++){var a=i*step-Math.PI/2;var r2=i%2===0?oR:iR;pts.push(_xy(cx,cy,r2,a));}
+  var d='M '+_f(pts[0].x)+' '+_f(pts[0].y);
+  for(var i=0;i<num;i++){
+    var curr=pts[i],next=pts[(i+1)%num];
+    var mx=_f((curr.x+next.x)/2),my=_f((curr.y+next.y)/2);
+    d+=' Q '+_f(curr.x)+' '+_f(curr.y)+' '+mx+' '+my;
+  }
+  return d+' Z';
+}
+function genBadge(w,h,p){
+  var cx=w/2,cy=h/2;
+  var maxR=Math.min(w,h)/2;
+  var plateR=maxR*0.88;
+  var outerR=plateR*(p.badgeOuterR||80)/100;
+  var innerR=outerR*(p.badgeInnerRatio||45)/100;
+  var n=p.badgeSpikes||12;
+  var type=p.badgeType||'star';
+  var bg=gc('bg'),face=gc('fg1'),shape=gc('fg2');
+  var r='<rect width="'+w+'" height="'+h+'" fill="'+bg+'"/>';
+  r+='<circle cx="'+_f(cx)+'" cy="'+_f(cy)+'" r="'+_f(plateR)+'" fill="'+face+'"/>';
+  var path='';
+  if(type==='star')path=makeStarPath(cx,cy,outerR,innerR,n);
+  else if(type==='sun')path=makeSunPath(cx,cy,outerR,innerR,n);
+  else if(type==='cog')path=makeCogPath(cx,cy,outerR,innerR,n);
+  else if(type==='wavy')path=makeWavyPath(cx,cy,outerR,innerR,n);
+  r+='<path d="'+path+'" fill="'+shape+'"/>';
+  return r;
+}
 function genPattern(){
   var w=state.canvasW,h=state.canvasH,p=state.params;
-  var map={'stripes-v':genSV,'stripes-h':genSH,'stripes-d':genSD,'plaid':genPlaid,'checker':genChecker,'diamond':genDiamond,'dots':genDots,'woven':genWoven,'grid':genGrid,'mixed':genMixed,'stripes-mix':genVarStripes,'halfcircle':genScallop,'vargrid':genVarGrid};
+  var map={'stripes-v':genSV,'stripes-h':genSH,'stripes-d':genSD,'plaid':genPlaid,'checker':genChecker,'diamond':genDiamond,'dots':genDots,'woven':genWoven,'grid':genGrid,'mixed':genMixed,'stripes-mix':genVarStripes,'halfcircle':genScallop,'vargrid':genVarGrid,'badge':genBadge};
   return (map[state.pattern]||genSV)(w,h,p);
 }
 
@@ -586,6 +662,7 @@ function buildParams(){
   if(pt==='woven'){slider('wovenCount','Bands',2,16,1);slider('wovenGap','Gap',0,12,1);}
   if(pt==='mixed'){slider('blockRows','Rows',1,5,1);slider('blockCols','Cols',1,5,1);}
   if(pt==='vargrid') buildVarGridUI(cont,p);
+  if(pt==='badge') buildBadgeUI(cont,p);
 }
 function buildVarGridUI(cont,p){
   // ── # Colors
@@ -625,6 +702,34 @@ function buildVarGridUI(cont,p){
   }
   bandEditor('Columns (widths)', p.varGridCols, '+ Col', true);
   bandEditor('Rows (heights)',   p.varGridRows,  '+ Row', false);
+}
+function buildBadgeUI(cont,p){
+  function select(key,label,opts){
+    var row=document.createElement('div');row.className='ctrl-row';row.style.flexDirection='column';row.style.alignItems='flex-start';row.style.gap='4px';
+    var lbl=document.createElement('div');lbl.className='ctrl-label';lbl.textContent=label;
+    var sel=document.createElement('select');sel.className='select-ctrl';
+    opts.forEach(function(o){var opt=document.createElement('option');opt.value=o.v;opt.textContent=o.l;if(p[key]===o.v)opt.selected=true;sel.appendChild(opt);});
+    sel.onchange=function(e){p[key]=e.target.value;render();};
+    row.appendChild(lbl);row.appendChild(sel);cont.appendChild(row);
+  }
+  function slider(key,label,min,max,step){
+    var row=document.createElement('div');row.className='ctrl-row';
+    var lbl=document.createElement('div');lbl.className='ctrl-label';lbl.textContent=label;
+    var val=document.createElement('div');val.className='ctrl-value';val.id='v_'+key;val.textContent=p[key]!=null?p[key]:min;
+    row.appendChild(lbl);row.appendChild(val);cont.appendChild(row);
+    var sl=document.createElement('input');sl.type='range';sl.min=min;sl.max=max;sl.step=step||1;sl.value=p[key]!=null?p[key]:min;
+    sl.oninput=function(e){p[key]=parseFloat(e.target.value);document.getElementById('v_'+key).textContent=p[key];render();};
+    cont.appendChild(sl);
+  }
+  select('badgeType','Shape Type',[
+    {v:'star', l:'Starburst (sharp spikes)'},
+    {v:'sun',  l:'Sun (smooth rays)'},
+    {v:'cog',  l:'Cog / Sawtooth circle'},
+    {v:'wavy', l:'Wavy Blob'}
+  ]);
+  slider('badgeSpikes','Spikes / Teeth',4,32,1);
+  slider('badgeOuterR','Outer Radius %',30,98,1);
+  slider('badgeInnerRatio','Inner Ratio %',10,90,1);
 }
 function buildPresets(){
   var cont=document.getElementById('presetPalettes');cont.innerHTML='';
