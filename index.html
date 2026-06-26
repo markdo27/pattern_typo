@@ -210,7 +210,10 @@ var state = {
     emblemCenterSize:30,
     emblemText:'WNYO',
     emblemFont:'Outfit',
-    emblemCenterRotate:0
+    emblemCenterRotate:0,
+    emblemCornerText:'Y*nW',
+    emblemCheckerCols:2,
+    emblemCheckerRows:12
   }
 };
 var DEFAULT_PARAMS = JSON.parse(JSON.stringify(state.params));
@@ -862,13 +865,31 @@ function genEmblem(w, h, p){
   var cFg4 = gc('fg4');
   var cFg5 = gc('fg5');
   var r = '';
+  var cornersText = p.emblemCornerText || 'Y*nW';
+  var cornerChars = cornersText.split('');
+  while(cornerChars.length < 4) cornerChars.push('');
+  function drawCorner(char, bgClr, iconColor, fontName){
+    if (char === '*') {
+      return '<circle cx="50" cy="35" r="14" fill="' + iconColor + '"/>' +
+             '<circle cx="50" cy="65" r="14" fill="' + iconColor + '"/>' +
+             '<circle cx="35" cy="50" r="14" fill="' + iconColor + '"/>' +
+             '<circle cx="65" cy="50" r="14" fill="' + iconColor + '"/>';
+    } else if (char === 'n' || char === '^') {
+      return '<path d="M 25,80 L 25,45 A 25,25 0 0,1 75,45 L 75,80 Z" fill="' + iconColor + '"/>';
+    } else if (char) {
+      var fontStyle = 'font-family:\'' + fontName + '\', sans-serif; font-weight:800; font-size:60px;';
+      return '<text x="50" y="50" text-anchor="middle" dominant-baseline="central" fill="' + iconColor + '" style="' + fontStyle + '">' + escapeHTML(char) + '</text>';
+    }
+    return '';
+  }
   if(showBorders && borderW > 0){
     r += '<rect x="0" y="0" width="' + borderW + '" height="' + h + '" fill="' + cBg + '"/>';
-    var bw = borderW / 2;
-    var numRows = Math.floor((h - 2 * borderW) / bw);
+    var cols = p.emblemCheckerCols || 2;
+    var bw = borderW / cols;
+    var numRows = p.emblemCheckerRows || 12;
     var rowH = (h - 2 * borderW) / numRows;
     for(var row=0; row<numRows; row++){
-      for(var col=0; col<2; col++){
+      for(var col=0; col<cols; col++){
         var rx_box = col * bw;
         var ry_box = borderW + row * rowH;
         var fillClr = ((row + col) % 2 === 0) ? cFg2 : cFg5;
@@ -876,17 +897,15 @@ function genEmblem(w, h, p){
       }
     }
     r += '<g transform="translate(0, 0) scale(' + (borderW / 100) + ')">';
-    r += '<line x1="50" y1="80" x2="50" y2="50" stroke="' + cFg3 + '" stroke-width="10" stroke-linecap="round"/>';
-    r += '<line x1="50" y1="50" x2="25" y2="25" stroke="' + cFg3 + '" stroke-width="10" stroke-linecap="round"/>';
-    r += '<line x1="50" y1="50" x2="75" y2="25" stroke="' + cFg3 + '" stroke-width="10" stroke-linecap="round"/>';
+    r += drawCorner(cornerChars[0], cBg, cFg3, p.emblemFont);
     r += '</g>';
     r += '<g transform="translate(0, ' + (h - borderW) + ') scale(' + (borderW / 100) + ')">';
-    r += '<path d="M 25,80 L 25,45 A 25,25 0 0,1 75,45 L 75,80 Z" fill="' + cFg3 + '"/>';
+    r += drawCorner(cornerChars[2], cBg, cFg3, p.emblemFont);
     r += '</g>';
     var rx0_right = w - borderW;
     r += '<rect x="' + rx0_right + '" y="0" width="' + borderW + '" height="' + h + '" fill="' + cBg + '"/>';
     for(var row=0; row<numRows; row++){
-      for(var col=0; col<2; col++){
+      for(var col=0; col<cols; col++){
         var rx_box = rx0_right + col * bw;
         var ry_box = borderW + row * rowH;
         var fillClr = ((row + col) % 2 === 0) ? cFg2 : cFg5;
@@ -894,13 +913,10 @@ function genEmblem(w, h, p){
       }
     }
     r += '<g transform="translate(' + rx0_right + ', 0) scale(' + (borderW / 100) + ')">';
-    r += '<circle cx="50" cy="35" r="14" fill="' + cFg3 + '"/>';
-    r += '<circle cx="50" cy="65" r="14" fill="' + cFg3 + '"/>';
-    r += '<circle cx="35" cy="50" r="14" fill="' + cFg3 + '"/>';
-    r += '<circle cx="65" cy="50" r="14" fill="' + cFg3 + '"/>';
+    r += drawCorner(cornerChars[1], cBg, cFg3, p.emblemFont);
     r += '</g>';
     r += '<g transform="translate(' + rx0_right + ', ' + (h - borderW) + ') scale(' + (borderW / 100) + ')">';
-    r += '<path d="M 25,25 L 37,75 L 50,45 L 63,75 L 75,25" stroke="' + cFg3 + '" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+    r += drawCorner(cornerChars[3], cBg, cFg3, p.emblemFont);
     r += '</g>';
   }
   var centralClipId = 'carea_clip_' + Math.floor(Math.random()*10000000);
@@ -1195,6 +1211,31 @@ function buildEmblemUI(cont, p){
   sliderE('emblemCloverSize','Clover Size %',40,90,1);
   sliderE('emblemCenterSize','Center Square %',15,50,1);
   sliderE('emblemCenterRotate','Center Rotate',0,360,1);
+  sliderE('emblemCheckerCols','Checker Columns',1,6,1);
+  sliderE('emblemCheckerRows','Checker Rows',4,30,1);
+
+  var rowCornerText = document.createElement('div');
+  rowCornerText.className = 'ctrl-row';
+  rowCornerText.style.flexDirection = 'column';
+  rowCornerText.style.alignItems = 'flex-start';
+  rowCornerText.style.gap = '4px';
+  var lblCornerText = document.createElement('div');
+  lblCornerText.className = 'ctrl-label';
+  lblCornerText.textContent = 'Corners Text (TL, TR, BL, BR. * clover, n arch)';
+  var inpCornerText = document.createElement('input');
+  inpCornerText.type = 'text';
+  inpCornerText.className = 'select-ctrl';
+  inpCornerText.style.width = '100%';
+  inpCornerText.style.cursor = 'text';
+  inpCornerText.maxLength = 4;
+  inpCornerText.value = p.emblemCornerText || 'Y*nW';
+  inpCornerText.oninput = function(e){
+    p.emblemCornerText = e.target.value;
+    render();
+  };
+  rowCornerText.appendChild(lblCornerText);
+  rowCornerText.appendChild(inpCornerText);
+  cont.appendChild(rowCornerText);
 
   var rowText = document.createElement('div');
   rowText.className = 'ctrl-row';
@@ -1785,6 +1826,12 @@ function randomizeParams(){
     var fonts = ['Outfit', 'Inter', 'Montserrat', 'Playfair Display', 'Fredoka', 'Rowdies', 'Pacifico', 'Anton', 'Bungee'];
     p.emblemFont = fonts[Math.floor(Math.random()*fonts.length)];
     if(typeof loadGoogleFont === 'function') loadGoogleFont(p.emblemFont);
+    p.emblemCheckerCols = Math.floor(Math.random()*4)+1;
+    p.emblemCheckerRows = Math.floor(Math.random()*16)+6;
+    // Generate randomized corner texts
+    var alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ*n^*';
+    p.emblemCornerText = '';
+    for(var i=0; i<4; i++) p.emblemCornerText += alph[Math.floor(Math.random()*alph.length)];
   }
   Object.keys(p).filter(function(k){return k.endsWith('Color');}).forEach(function(k){
     p[k] = Math.floor(Math.random()*state.colors.length);
