@@ -189,7 +189,13 @@ var state = {
     varGridRows:[1,2,1,3,1,2],
     varGridColors:2,
     badgeType:'star', badgeSpikes:12, badgeOuterR:80, badgeInnerRatio:45,
-    badgeFaceType:'solid'
+    badgeFaceType:'solid',
+    splitVCols:[5,2,3,9,1],
+    splitVStyles:['stripes-h-thick','stripes-h-thin','blocks','stripes-h-thick','stripes-h-thin'],
+    splitVColors:[[6,4],[1,0],[5,3],[1,2],[3,6]],
+    dotGridBandW:10, dotGridLineW:3, dotGridBorderW:12,
+    splitHTopRatio:55, splitHMidRatio:12, splitHBotRatio:30,
+    splitHDiamondSize:45, splitHStripeCount:24
   }
 };
 
@@ -208,7 +214,10 @@ var PATTERNS = [
   {id:'stripes-mix',label:'Var Strip', icon:tVarStripes},
   {id:'halfcircle', label:'Scallop',   icon:tScallop},
   {id:'vargrid',    label:'Var Grid',  icon:tVarGrid},
-  {id:'badge',      label:'Badge',     icon:tBadge}
+  {id:'badge',      label:'Badge',     icon:tBadge},
+  {id:'split-v',    label:'Split V',   icon:tSplitV},
+  {id:'dot-grid',   label:'Dot Grid',  icon:tDotGrid},
+  {id:'split-h',    label:'Split H',   icon:tSplitH}
 ];
 var ROLES = {
   'stripes-v':[{k:'bg',l:'Background'},{k:'fg1',l:'Stripe 1'},{k:'fg2',l:'Stripe 2'},{k:'fg3',l:'Stripe 3'},{k:'fg4',l:'Stripe 4'}],
@@ -224,7 +233,10 @@ var ROLES = {
   'stripes-mix':[{k:'bg',l:'BG'},{k:'fg1',l:'Stripe 1'},{k:'fg2',l:'Stripe 2'},{k:'fg3',l:'Stripe 3'},{k:'fg4',l:'Stripe 4'},{k:'fg5',l:'Stripe 5'}],
   'halfcircle':[{k:'bg',l:'Background'},{k:'fg1',l:'Circle 1'},{k:'fg2',l:'Circle 2'}],
   'vargrid':[{k:'bg',l:'Color 1'},{k:'fg1',l:'Color 2'},{k:'fg2',l:'Color 3'},{k:'fg3',l:'Color 4'}],
-  'badge':[{k:'bg',l:'Outer Ring'},{k:'fg1',l:'Face / Color 1'},{k:'fg2',l:'Face Color 2'},{k:'fg3',l:'Shape Color'}]
+  'badge':[{k:'bg',l:'Outer Ring'},{k:'fg1',l:'Face / Color 1'},{k:'fg2',l:'Face Color 2'},{k:'fg3',l:'Shape Color'}],
+  'split-v':[{k:'bg',l:'Default BG'}],
+  'dot-grid':[{k:'bg',l:'Background'},{k:'fg1',l:'Border'},{k:'fg2',l:'Bands (Red)'},{k:'fg3',l:'Lines (Blue)'},{k:'fg4',l:'Dots (Pink)'}],
+  'split-h':[{k:'bg',l:'Top BG'},{k:'fg1',l:'Top Diamond'},{k:'fg2',l:'Middle Band'},{k:'fg3',l:'Bottom Stripe 1'},{k:'fg4',l:'Bottom Stripe 2'},{k:'fg5',l:'Bottom Thin Band'}]
 };
 var PRESETS = [
   {name:'Dicaphe',   colors:['#1e0c02','#0d8018','#1a42cc','#c400ca','#f03525','#fff0a8','#ff0f7e','#ffbe00']},
@@ -278,6 +290,64 @@ function tBadge(){
   var pts='';var n=10;
   for(var i=0;i<n*2;i++){var a=i*Math.PI/n-Math.PI/2;var rad=i%2===0?22:11;pts+=(32+rad*Math.cos(a)).toFixed(1)+','+(32+rad*Math.sin(a)).toFixed(1)+' ';}
   r+='<polygon points="'+pts+'" fill="'+ci(2)+'"/>';
+  return ts(r);
+}
+function tSplitV(){
+  var r = '<rect width="64" height="64" fill="'+ci(0)+'"/>';
+  r += '<rect x="0" y="0" width="16" height="64" fill="'+ci(6)+'"/>';
+  for(var i=0; i<4; i++) r += '<rect x="0" y="'+(i*16)+'" width="16" height="8" fill="'+ci(4)+'"/>';
+  r += '<rect x="16" y="0" width="8" height="64" fill="'+ci(1)+'"/>';
+  for(var i=0; i<8; i++) r += '<rect x="16" y="'+(i*8)+'" width="8" height="4" fill="'+ci(0)+'"/>';
+  r += '<rect x="24" y="0" width="10" height="64" fill="'+ci(5)+'"/>';
+  for(var i=0; i<4; i++) r += '<line x1="24" y1="'+(i*16)+'" x2="34" y2="'+(i*16)+'" stroke="'+ci(3)+'" stroke-width="1"/>';
+  r += '<rect x="34" y="0" width="26" height="64" fill="'+ci(1)+'"/>';
+  for(var i=0; i<4; i++) r += '<rect x="34" y="'+(i*16)+'" width="26" height="8" fill="'+ci(2)+'"/>';
+  r += '<rect x="60" y="0" width="4" height="64" fill="'+ci(3)+'"/>';
+  for(var i=0; i<8; i++) r += '<rect x="60" y="'+(i*8)+'" width="4" height="4" fill="'+ci(6)+'"/>';
+  return ts(r);
+}
+function tDotGrid(){
+  var r = '<rect width="64" height="64" fill="'+ci(5)+'"/>';
+  var s = 16;
+  var bandW = 3;
+  var lineW = 1;
+  for(var i=1; i<4; i++) {
+    r += '<rect x="'+(i*s - bandW/2)+'" y="0" width="'+bandW+'" height="64" fill="'+ci(4)+'"/>';
+    r += '<rect x="0" y="'+(i*s - bandW/2)+'" width="64" height="'+bandW+'" fill="'+ci(4)+'"/>';
+    r += '<line x1="'+(i*s - s/2)+'" y1="0" x2="'+(i*s - s/2)+'" y2="64" stroke="'+ci(2)+'" stroke-width="'+lineW+'"/>';
+    r += '<line x1="0" y1="'+(i*s - s/2)+'" x2="64" y2="'+(i*s - s/2)+'" stroke="'+ci(2)+'" stroke-width="'+lineW+'"/>';
+  }
+  for(var i=1; i<4; i++) {
+    for(var j=1; j<4; j++) {
+      r += '<circle cx="'+(i*s)+'" cy="'+(j*s)+'" r="3.5" fill="'+ci(6)+'"/>';
+    }
+  }
+  r += '<rect x="0" y="0" width="64" height="64" fill="none" stroke="'+ci(1)+'" stroke-width="4"/>';
+  return ts(r);
+}
+function tSplitH(){
+  var r = '<rect width="64" height="64" fill="'+ci(5)+'"/>';
+  var h1 = 34;
+  r += '<g><rect width="64" height="'+h1+'" fill="'+ci(5)+'"/>';
+  var s = 12;
+  for(var row=-1; row<4; row++) {
+    for(var col=-1; col<6; col++) {
+      var cx = col*s + ((row&1)?s/2:0);
+      var cy = row*s/2;
+      r += '<polygon points="'+cx+','+(cy-s/2)+' '+(cx+s/2)+','+cy+' '+cx+','+(cy+s/2)+' '+(cx-s/2)+','+cy+'" fill="'+ci(1)+'"/>';
+    }
+  }
+  r += '</g>';
+  var h2 = 8;
+  r += '<rect x="0" y="'+h1+'" width="64" height="'+h2+'" fill="'+ci(3)+'"/>';
+  var h3 = 18;
+  var y3 = h1 + h2;
+  r += '<rect x="0" y="'+y3+'" width="64" height="'+h3+'" fill="'+ci(6)+'"/>';
+  var sw = 64 / 12;
+  for(var i=0; i<12; i+=2) {
+    r += '<rect x="'+(i*sw)+'" y="'+y3+'" width="'+sw+'" height="'+h3+'" fill="'+ci(4)+'"/>';
+  }
+  r += '<rect x="0" y="60" width="64" height="4" fill="'+ci(2)+'"/>';
   return ts(r);
 }
 
@@ -569,7 +639,7 @@ function genBadge(w,h,p){
     shape=gc('fg2');
   } else {
     // Tiled pattern clipped to plate circle
-    var clipId='bclip'+Date.now();
+    var clipId='bclip'+Math.floor(Math.random()*10000000);
     r+='<defs><clipPath id="'+clipId+'"><circle cx="'+_f(cx)+'" cy="'+_f(cy)+'" r="'+_f(plateR)+'"/></clipPath></defs>';
     r+='<g clip-path="url(#'+clipId+')">'+genFacePattern(w,h,ft,c1,c2,p)+'</g>';
     // fg3 = shape color
@@ -582,9 +652,135 @@ function genBadge(w,h,p){
   r+='<path d="'+path+'" fill="'+shape+'"/>';
   return r;
 }
+function genSplitV(w,h,p){
+  var cws=p.splitVCols||[5,2,3,9,1];
+  var styles=p.splitVStyles||['stripes-h-thick','stripes-h-thin','blocks','stripes-h-thick','stripes-h-thin'];
+  var colors=p.splitVColors||[[6,4],[1,0],[5,3],[1,2],[3,6]];
+  var tc=cws.reduce(function(a,b){return a+b;},0);
+  var r='',cumX=0;
+  for(var col=0;col<cws.length;col++){
+    var x0=Math.round(cumX/tc*w);
+    var x1=Math.round((cumX+cws[col])/tc*w);
+    var cw=x1-x0;
+    var style=styles[col]||'solid';
+    var cc=colors[col]||[0,1];
+    var c1=state.colors[cc[0]%state.colors.length]||'#fff';
+    var c2=state.colors[cc[1]%state.colors.length]||'#fff';
+    if(style==='solid'){
+      r+='<rect x="'+x0+'" y="0" width="'+cw+'" height="'+h+'" fill="'+c1+'"/>';
+    }else if(style==='stripes-h-thick'){
+      var sn=8;
+      var sh=h/sn;
+      for(var i=0;i<sn;i++){
+        var y0=Math.round(i*sh),y1=Math.round((i+1)*sh);
+        r+='<rect x="'+x0+'" y="'+y0+'" width="'+cw+'" height="'+(y1-y0)+'" fill="'+(i%2===0?c1:c2)+'"/>';
+      }
+    }else if(style==='stripes-h-thin'){
+      var sn=24;
+      var sh=h/sn;
+      for(var i=0;i<sn;i++){
+        var y0=Math.round(i*sh),y1=Math.round((i+1)*sh);
+        r+='<rect x="'+x0+'" y="'+y0+'" width="'+cw+'" height="'+(y1-y0)+'" fill="'+(i%2===0?c1:c2)+'"/>';
+      }
+    }else if(style==='blocks'){
+      var sn=8;
+      var sh=h/sn;
+      r+='<rect x="'+x0+'" y="0" width="'+cw+'" height="'+h+'" fill="'+c1+'"/>';
+      for(var i=0;i<=sn;i++){
+        var ly=Math.round(i*sh);
+        r+='<line x1="'+x0+'" y1="'+ly+'" x2="'+x1+'" y2="'+ly+'" stroke="'+c2+'" stroke-width="2"/>';
+      }
+    }else if(style==='stripes-v'){
+      var sn=4;
+      var sw=cw/sn;
+      for(var i=0;i<sn;i++){
+        var sx0=Math.round(x0+i*sw),sx1=Math.round(x0+(i+1)*sw);
+        r+='<rect x="'+sx0+'" y="0" width="'+(sx1-sx0)+'" height="'+h+'" fill="'+(i%2===0?c1:c2)+'"/>';
+      }
+    }
+    cumX+=cws[col];
+  }
+  return r;
+}
+function genDotGrid(w,h,p){
+  var bg=gc('bg'),borderColor=gc('fg1'),bandColor=gc('fg2'),lineColor=gc('fg3'),dotColor=gc('fg4');
+  var S=p.dotSpacing||80;
+  var bandW=p.dotGridBandW||10;
+  var lineW=p.dotGridLineW||3;
+  var borderW=p.dotGridBorderW||12;
+  var dotR=p.dotRadius||20;
+  var cx=w/2,cy=h/2;
+  var r='<rect width="'+w+'" height="'+h+'" fill="'+bg+'"/>';
+  var kMin=-Math.ceil(w/S)-1,kMax=Math.ceil(w/S)+1;
+  var jMin=-Math.ceil(h/S)-1,jMax=Math.ceil(h/S)+1;
+  for(var k=kMin;k<=kMax;k++){
+    var rx=Math.round(cx+(k+0.5)*S);
+    r+='<rect x="'+(rx-bandW/2)+'" y="0" width="'+bandW+'" height="'+h+'" fill="'+bandColor+'"/>';
+    var bx=Math.round(cx+k*S);
+    r+='<line x1="'+bx+'" y1="0" x2="'+bx+'" y2="'+h+'" stroke="'+lineColor+'" stroke-width="'+lineW+'"/>';
+  }
+  for(var j=jMin;j<=jMax;j++){
+    var ry=Math.round(cy+(j+0.5)*S);
+    r+='<rect x="0" y="'+(ry-bandW/2)+'" width="'+w+'" height="'+bandW+'" fill="'+bandColor+'"/>';
+    var by=Math.round(cy+j*S);
+    r+='<line x1="0" y1="'+by+'" x2="'+w+'" y2="'+by+'" stroke="'+lineColor+'" stroke-width="'+lineW+'"/>';
+  }
+  for(var k=kMin;k<=kMax;k++){
+    var rx=Math.round(cx+(k+0.5)*S);
+    for(var j=jMin;j<=jMax;j++){
+      var ry=Math.round(cy+(j+0.5)*S);
+      r+='<circle cx="'+rx+'" cy="'+ry+'" r="'+dotR+'" fill="'+dotColor+'"/>';
+    }
+  }
+  if(borderW>0){
+    r+='<rect x="0" y="0" width="'+w+'" height="'+h+'" fill="none" stroke="'+borderColor+'" stroke-width="'+(borderW*2)+'"/>';
+  }
+  return r;
+}
+function genSplitH(w,h,p){
+  var h1=Math.round((p.splitHTopRatio||55)/100*h);
+  var h2=Math.round((p.splitHMidRatio||12)/100*h);
+  var h3=Math.round((p.splitHBotRatio||30)/100*h);
+  var r='';
+  var clipId='hclip'+Math.floor(Math.random()*10000000);
+  r+='<defs><clipPath id="'+clipId+'"><rect x="0" y="0" width="'+w+'" height="'+h1+'"/></clipPath></defs>';
+  r+='<g clip-path="url(#'+clipId+')">';
+  var s=p.splitHDiamondSize||45;
+  var bgTop=gc('bg');
+  var diaColor=gc('fg1');
+  r+='<rect width="'+w+'" height="'+h1+'" fill="'+bgTop+'"/>';
+  var rows=Math.ceil(h1/s)*2+4,c2=Math.ceil(w/s)*2+4;
+  for(var row=-2;row<rows;row++){
+    for(var col=-2;col<c2;col++){
+      var cx=col*s+((row&1)?s/2:0);
+      var cy=row*s/2;
+      r+='<polygon points="'+cx+','+(cy-s/2)+' '+(cx+s/2)+','+cy+' '+cx+','+(cy+s/2)+' '+(cx-s/2)+','+cy+'" fill="'+diaColor+'"/>';
+    }
+  }
+  r+='</g>';
+  var midColor=gc('fg2');
+  r+='<rect x="0" y="'+h1+'" width="'+w+'" height="'+h2+'" fill="'+midColor+'"/>';
+  var y3=h1+h2;
+  var stripeCount=p.splitHStripeCount||24;
+  var stripeW=w/stripeCount;
+  var c3=gc('fg3');
+  var c4=gc('fg4');
+  r+='<rect x="0" y="'+y3+'" width="'+w+'" height="'+h3+'" fill="'+c3+'"/>';
+  for(var i=0;i<stripeCount;i+=2){
+    var sx0=Math.round(i*stripeW);
+    var sx1=Math.round((i+1)*stripeW);
+    r+='<rect x="'+sx0+'" y="'+y3+'" width="'+(sx1-sx0)+'" height="'+h3+'" fill="'+c4+'"/>';
+  }
+  var y4=y3+h3;
+  var h4=h-y4;
+  if(h4>0){
+    r+='<rect x="0" y="'+y4+'" width="'+w+'" height="'+h4+'" fill="'+gc('fg5')+'"/>';
+  }
+  return r;
+}
 function genPattern(){
   var w=state.canvasW,h=state.canvasH,p=state.params;
-  var map={'stripes-v':genSV,'stripes-h':genSH,'stripes-d':genSD,'plaid':genPlaid,'checker':genChecker,'diamond':genDiamond,'dots':genDots,'woven':genWoven,'grid':genGrid,'mixed':genMixed,'stripes-mix':genVarStripes,'halfcircle':genScallop,'vargrid':genVarGrid,'badge':genBadge};
+  var map={'stripes-v':genSV,'stripes-h':genSH,'stripes-d':genSD,'plaid':genPlaid,'checker':genChecker,'diamond':genDiamond,'dots':genDots,'woven':genWoven,'grid':genGrid,'mixed':genMixed,'stripes-mix':genVarStripes,'halfcircle':genScallop,'vargrid':genVarGrid,'badge':genBadge,'split-v':genSplitV,'dot-grid':genDotGrid,'split-h':genSplitH};
   return (map[state.pattern]||genSV)(w,h,p);
 }
 
@@ -703,6 +899,9 @@ function buildParams(){
   if(pt==='mixed'){slider('blockRows','Rows',1,5,1);slider('blockCols','Cols',1,5,1);}
   if(pt==='vargrid') buildVarGridUI(cont,p);
   if(pt==='badge') buildBadgeUI(cont,p);
+  if(pt==='split-v') buildSplitVUI(cont,p);
+  if(pt==='dot-grid') buildDotGridUI(cont,p);
+  if(pt==='split-h') buildSplitHUI(cont,p);
 }
 function buildVarGridUI(cont,p){
   // ── # Colors
@@ -742,6 +941,145 @@ function buildVarGridUI(cont,p){
   }
   bandEditor('Columns (widths)', p.varGridCols, '+ Col', true);
   bandEditor('Rows (heights)',   p.varGridRows,  '+ Row', false);
+}
+function buildSplitVUI(cont,p){
+  var cws=p.splitVCols||[5,2,3,9,1];
+  var styles=p.splitVStyles||['stripes-h-thick','stripes-h-thin','blocks','stripes-h-thick','stripes-h-thin'];
+  var colors=p.splitVColors||[[6,4],[1,0],[5,3],[1,2],[3,6]];
+  var title=document.createElement('div');
+  title.className='panel-title';
+  title.style.marginTop='10px';
+  title.textContent='Columns Editor';
+  cont.appendChild(title);
+  cws.forEach(function(cw,i){
+    var colWrap=document.createElement('div');
+    colWrap.style.cssText='border-bottom:1px solid var(--border);padding:10px 0;';
+    var hdr=document.createElement('div');
+    hdr.style.cssText='font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;display:flex;justify-content:space-between;';
+    hdr.textContent='Column '+(i+1);
+    colWrap.appendChild(hdr);
+    var rowW=document.createElement('div');
+    rowW.className='ctrl-row';
+    var lblW=document.createElement('div');
+    lblW.className='ctrl-label';
+    lblW.textContent='Width Ratio';
+    var valW=document.createElement('div');
+    valW.className='ctrl-value';
+    valW.textContent=cw;
+    rowW.appendChild(lblW);
+    rowW.appendChild(valW);
+    colWrap.appendChild(rowW);
+    var slW=document.createElement('input');
+    slW.type='range';
+    slW.min=1;
+    slW.max=15;
+    slW.step=1;
+    slW.value=cw;
+    slW.oninput=function(e){
+      cws[i]=parseInt(e.target.value);
+      valW.textContent=cws[i];
+      render();
+    };
+    colWrap.appendChild(slW);
+    var rowS=document.createElement('div');
+    rowS.className='ctrl-row';
+    rowS.style.cssText='flex-direction:column;align-items:flex-start;gap:4px;';
+    var lblS=document.createElement('div');
+    lblS.className='ctrl-label';
+    lblS.textContent='Style';
+    var selS=document.createElement('select');
+    selS.className='select-ctrl';
+    var opts=[
+      {v:'solid',l:'Solid Color'},
+      {v:'stripes-h-thick',l:'Stripes H (Thick)'},
+      {v:'stripes-h-thin',l:'Stripes H (Thin)'},
+      {v:'blocks',l:'Blocks (Grid Lines)'},
+      {v:'stripes-v',l:'Stripes V'}
+    ];
+    opts.forEach(function(o){
+      var opt=document.createElement('option');
+      opt.value=o.v;
+      opt.textContent=o.l;
+      if(styles[i]===o.v)opt.selected=true;
+      selS.appendChild(opt);
+    });
+    selS.onchange=function(e){
+      styles[i]=e.target.value;
+      render();
+    };
+    rowS.appendChild(lblS);
+    rowS.appendChild(selS);
+    colWrap.appendChild(rowS);
+    var rowC=document.createElement('div');
+    rowC.className='ctrl-row';
+    var lblC=document.createElement('div');
+    lblC.className='ctrl-label';
+    lblC.textContent='Colors (Click to Cycle)';
+    rowC.appendChild(lblC);
+    var dotsWrap=document.createElement('div');
+    dotsWrap.style.cssText='display:flex;gap:6px;';
+    var dot1=document.createElement('div');
+    dot1.className='assign-dot';
+    dot1.style.background=state.colors[colors[i][0]%state.colors.length];
+    dot1.setAttribute('data-idx',colors[i][0]+1);
+    dot1.onclick=function(){
+      colors[i][0]=(colors[i][0]+1)%state.colors.length;
+      dot1.style.background=state.colors[colors[i][0]];
+      dot1.setAttribute('data-idx',colors[i][0]+1);
+      render();
+    };
+    dotsWrap.appendChild(dot1);
+    var dot2=document.createElement('div');
+    dot2.className='assign-dot';
+    dot2.style.background=state.colors[colors[i][1]%state.colors.length];
+    dot2.setAttribute('data-idx',colors[i][1]+1);
+    dot2.onclick=function(){
+      colors[i][1]=(colors[i][1]+1)%state.colors.length;
+      dot2.style.background=state.colors[colors[i][1]];
+      dot2.setAttribute('data-idx',colors[i][1]+1);
+      render();
+    };
+    dotsWrap.appendChild(dot2);
+    rowC.appendChild(dotsWrap);
+    colWrap.appendChild(rowC);
+    cont.appendChild(colWrap);
+  });
+}
+function buildDotGridUI(cont,p){
+  function sliderDG(key,label,min,max,step){
+    var row=document.createElement('div');row.className='ctrl-row';
+    var lbl=document.createElement('div');lbl.className='ctrl-label';lbl.textContent=label;
+    var val=document.createElement('div');val.className='ctrl-value';val.id='v_dg'+key;val.textContent=p[key]!=null?p[key]:min;
+    row.appendChild(lbl);row.appendChild(val);cont.appendChild(row);
+    var sl=document.createElement('input');sl.type='range';sl.min=min;sl.max=max;sl.step=step||1;sl.value=p[key]!=null?p[key]:min;
+    sl.oninput=function(e){p[key]=parseFloat(e.target.value);document.getElementById('v_dg'+key).textContent=p[key];render();};
+    cont.appendChild(sl);
+  }
+  sliderDG('dotSpacing','Grid Spacing',30,200,5);
+  sliderDG('dotRadius','Circle Radius',2,80,1);
+  sliderDG('dotGridBandW','Band Width',1,30,1);
+  sliderDG('dotGridLineW','Line Width',0,15,1);
+  sliderDG('dotGridBorderW','Border Width',0,40,1);
+}
+function buildSplitHUI(cont,p){
+  function sliderSH(key,label,min,max,step){
+    var row=document.createElement('div');row.className='ctrl-row';
+    var lbl=document.createElement('div');lbl.className='ctrl-label';lbl.textContent=label;
+    var val=document.createElement('div');val.className='ctrl-value';val.id='v_sh'+key;val.textContent=p[key]!=null?p[key]:min;
+    row.appendChild(lbl);row.appendChild(val);cont.appendChild(row);
+    var sl=document.createElement('input');sl.type='range';sl.min=min;sl.max=max;sl.step=step||1;sl.value=p[key]!=null?p[key]:min;
+    sl.oninput=function(e){p[key]=parseFloat(e.target.value);document.getElementById('v_sh'+key).textContent=p[key];render();};
+    cont.appendChild(sl);
+  }
+  var totalRow = document.createElement('div');
+  totalRow.style.cssText = 'font-size:11px;color:var(--text2);margin-bottom:8px;font-style:italic;';
+  totalRow.textContent = 'Note: Top, Mid, and Bot heights are % ratios of total height.';
+  cont.appendChild(totalRow);
+  sliderSH('splitHTopRatio','Top Height %',10,80,1);
+  sliderSH('splitHMidRatio','Mid Height %',5,40,1);
+  sliderSH('splitHBotRatio','Bot Height %',10,60,1);
+  sliderSH('splitHDiamondSize','Diamond Size',15,120,5);
+  sliderSH('splitHStripeCount','Bottom Stripes',4,64,2);
 }
 function buildBadgeUI(cont,p){
   // ── local helpers
