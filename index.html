@@ -336,7 +336,8 @@ function tSplitH(){
     for(var col=-1; col<6; col++) {
       var cx = col*s + ((row&1)?s/2:0);
       var cy = row*s/2;
-      r += '<polygon points="'+cx+','+(cy-s/2)+' '+(cx+s/2)+','+cy+' '+cx+','+(cy+s/2)+' '+(cx-s/2)+','+cy+'" fill="'+ci(1)+'"/>';
+      var useDia = ((row + col) % 2 + 2) % 2 === 0;
+      r += '<polygon points="'+cx+','+(cy-s/2)+' '+(cx+s/2)+','+cy+' '+cx+','+(cy+s/2)+' '+(cx-s/2)+','+cy+'" fill="'+(useDia?ci(1):ci(5))+'"/>';
     }
   }
   r += '</g>';
@@ -756,7 +757,8 @@ function genSplitH(w,h,p){
     for(var col=-2;col<c2;col++){
       var cx=col*s+((row&1)?s/2:0);
       var cy=row*s/2;
-      r+='<polygon points="'+cx+','+(cy-s/2)+' '+(cx+s/2)+','+cy+' '+cx+','+(cy+s/2)+' '+(cx-s/2)+','+cy+'" fill="'+diaColor+'"/>';
+      var useDia = ((row + col) % 2 + 2) % 2 === 0;
+      r+='<polygon points="'+cx+','+(cy-s/2)+' '+(cx+s/2)+','+cy+' '+cx+','+(cy+s/2)+' '+(cx-s/2)+','+cy+'" fill="'+(useDia?diaColor:bgTop)+'"/>';
     }
   }
   r+='</g>';
