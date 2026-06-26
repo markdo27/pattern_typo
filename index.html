@@ -188,7 +188,8 @@ var state = {
     varGridCols:[2,1,3,1,2,1,3],
     varGridRows:[1,2,1,3,1,2],
     varGridColors:2,
-    badgeType:'star', badgeSpikes:12, badgeOuterR:80, badgeInnerRatio:45
+    badgeType:'star', badgeSpikes:12, badgeOuterR:80, badgeInnerRatio:45,
+    badgeFaceType:'solid'
   }
 };
 
@@ -223,7 +224,7 @@ var ROLES = {
   'stripes-mix':[{k:'bg',l:'BG'},{k:'fg1',l:'Stripe 1'},{k:'fg2',l:'Stripe 2'},{k:'fg3',l:'Stripe 3'},{k:'fg4',l:'Stripe 4'},{k:'fg5',l:'Stripe 5'}],
   'halfcircle':[{k:'bg',l:'Background'},{k:'fg1',l:'Circle 1'},{k:'fg2',l:'Circle 2'}],
   'vargrid':[{k:'bg',l:'Color 1'},{k:'fg1',l:'Color 2'},{k:'fg2',l:'Color 3'},{k:'fg3',l:'Color 4'}],
-  'badge':[{k:'bg',l:'Outer Ring'},{k:'fg1',l:'Plate Face'},{k:'fg2',l:'Shape Color'}]
+  'badge':[{k:'bg',l:'Outer Ring'},{k:'fg1',l:'Face / Color 1'},{k:'fg2',l:'Face Color 2'},{k:'fg3',l:'Shape Color'}]
 };
 var PRESETS = [
   {name:'Dicaphe',   colors:['#1e0c02','#0d8018','#1a42cc','#c400ca','#f03525','#fff0a8','#ff0f7e','#ffbe00']},
@@ -523,6 +524,34 @@ function makeWavyPath(cx,cy,oR,iR,n){
   }
   return d+' Z';
 }
+// ── BADGE FACE PATTERN GENERATOR (used inside clipPath)
+function genFacePattern(w,h,ft,c1,c2,p){
+  var r='<rect width="'+w+'" height="'+h+'" fill="'+c1+'"/>';
+  if(ft==='stripes-v'){
+    var n=p.badgeStripes||8;
+    for(var i=0;i<n;i++){var x0=Math.round(i*w/n),x1=Math.round((i+1)*w/n);r+='<rect x="'+x0+'" y="0" width="'+(x1-x0)+'" height="'+h+'" fill="'+(i%2===0?c1:c2)+'"/>';}
+  } else if(ft==='stripes-h'){
+    var n=p.badgeStripes||8;
+    for(var i=0;i<n;i++){var y0=Math.round(i*h/n),y1=Math.round((i+1)*h/n);r+='<rect x="0" y="'+y0+'" width="'+w+'" height="'+(y1-y0)+'" fill="'+(i%2===0?c1:c2)+'"/>';}
+  } else if(ft==='checker'){
+    var s=p.badgeCellSize||40,nc2=Math.ceil(w/s)+2,nr=Math.ceil(h/s)+2;
+    for(var row=0;row<nr;row++)for(var col=0;col<nc2;col++)r+='<rect x="'+Math.round(col*s)+'" y="'+Math.round(row*s)+'" width="'+s+'" height="'+s+'" fill="'+((row+col)%2===0?c1:c2)+'"/>';
+  } else if(ft==='vargrid'){
+    var cws=p.varGridCols||[2,1,3,1,2,1,3],rhs=p.varGridRows||[1,2,1,3,1,2];
+    var tc=cws.reduce(function(a,b){return a+b;},0),tr=rhs.reduce(function(a,b){return a+b;},0);
+    var cumY=0;
+    for(var row=0;row<rhs.length;row++){
+      var y0=Math.round(cumY/tr*h),y1=Math.round((cumY+rhs[row])/tr*h),cumX=0;
+      for(var col=0;col<cws.length;col++){
+        var x0=Math.round(cumX/tc*w),x1=Math.round((cumX+cws[col])/tc*w);
+        r+='<rect x="'+x0+'" y="'+y0+'" width="'+(x1-x0)+'" height="'+(y1-y0)+'" fill="'+((row+col)%2===0?c1:c2)+'"/>';
+        cumX+=cws[col];
+      }
+      cumY+=rhs[row];
+    }
+  }
+  return r;
+}
 function genBadge(w,h,p){
   var cx=w/2,cy=h/2;
   var maxR=Math.min(w,h)/2;
@@ -531,9 +560,20 @@ function genBadge(w,h,p){
   var innerR=outerR*(p.badgeInnerRatio||45)/100;
   var n=p.badgeSpikes||12;
   var type=p.badgeType||'star';
-  var bg=gc('bg'),face=gc('fg1'),shape=gc('fg2');
+  var ft=p.badgeFaceType||'solid';
+  var bg=gc('bg'),c1=gc('fg1'),c2=gc('fg2'),shape=gc('fg3');
   var r='<rect width="'+w+'" height="'+h+'" fill="'+bg+'"/>';
-  r+='<circle cx="'+_f(cx)+'" cy="'+_f(cy)+'" r="'+_f(plateR)+'" fill="'+face+'"/>';
+  if(ft==='solid'){
+    r+='<circle cx="'+_f(cx)+'" cy="'+_f(cy)+'" r="'+_f(plateR)+'" fill="'+c1+'"/>';
+    // In solid mode, fg2 = shape color, fg3 unused
+    shape=gc('fg2');
+  } else {
+    // Tiled pattern clipped to plate circle
+    var clipId='bclip'+Date.now();
+    r+='<defs><clipPath id="'+clipId+'"><circle cx="'+_f(cx)+'" cy="'+_f(cy)+'" r="'+_f(plateR)+'"/></clipPath></defs>';
+    r+='<g clip-path="url(#'+clipId+')">'+genFacePattern(w,h,ft,c1,c2,p)+'</g>';
+    // fg3 = shape color
+  }
   var path='';
   if(type==='star')path=makeStarPath(cx,cy,outerR,innerR,n);
   else if(type==='sun')path=makeSunPath(cx,cy,outerR,innerR,n);
@@ -704,32 +744,76 @@ function buildVarGridUI(cont,p){
   bandEditor('Rows (heights)',   p.varGridRows,  '+ Row', false);
 }
 function buildBadgeUI(cont,p){
-  function select(key,label,opts){
+  // ── local helpers
+  function sliderB(key,label,min,max,step){
+    var row=document.createElement('div');row.className='ctrl-row';
+    var lbl=document.createElement('div');lbl.className='ctrl-label';lbl.textContent=label;
+    var val=document.createElement('div');val.className='ctrl-value';val.id='v_b'+key;val.textContent=p[key]!=null?p[key]:min;
+    row.appendChild(lbl);row.appendChild(val);cont.appendChild(row);
+    var sl=document.createElement('input');sl.type='range';sl.min=min;sl.max=max;sl.step=step||1;sl.value=p[key]!=null?p[key]:min;
+    sl.oninput=function(e){p[key]=parseFloat(e.target.value);document.getElementById('v_b'+key).textContent=p[key];render();};
+    cont.appendChild(sl);
+  }
+  function selectB(key,label,opts,rebuild){
     var row=document.createElement('div');row.className='ctrl-row';row.style.flexDirection='column';row.style.alignItems='flex-start';row.style.gap='4px';
     var lbl=document.createElement('div');lbl.className='ctrl-label';lbl.textContent=label;
     var sel=document.createElement('select');sel.className='select-ctrl';
     opts.forEach(function(o){var opt=document.createElement('option');opt.value=o.v;opt.textContent=o.l;if(p[key]===o.v)opt.selected=true;sel.appendChild(opt);});
-    sel.onchange=function(e){p[key]=e.target.value;render();};
+    sel.onchange=function(e){p[key]=e.target.value;render();if(rebuild)buildParams();};
     row.appendChild(lbl);row.appendChild(sel);cont.appendChild(row);
   }
-  function slider(key,label,min,max,step){
-    var row=document.createElement('div');row.className='ctrl-row';
-    var lbl=document.createElement('div');lbl.className='ctrl-label';lbl.textContent=label;
-    var val=document.createElement('div');val.className='ctrl-value';val.id='v_'+key;val.textContent=p[key]!=null?p[key]:min;
-    row.appendChild(lbl);row.appendChild(val);cont.appendChild(row);
-    var sl=document.createElement('input');sl.type='range';sl.min=min;sl.max=max;sl.step=step||1;sl.value=p[key]!=null?p[key]:min;
-    sl.oninput=function(e){p[key]=parseFloat(e.target.value);document.getElementById('v_'+key).textContent=p[key];render();};
-    cont.appendChild(sl);
+  function bandEditorB(label,arr,isCol){
+    var wrap=document.createElement('div');wrap.style.marginBottom='10px';
+    var hdr=document.createElement('div');hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:4px';
+    var hl=document.createElement('div');hl.className='panel-title';hl.style.margin='0';hl.textContent=label;
+    var btns=document.createElement('div');btns.style.cssText='display:flex;gap:4px';
+    var aBtn=document.createElement('button');aBtn.className='zoom-btn';aBtn.textContent='+';aBtn.style.fontSize='16px';
+    aBtn.onclick=function(){if(arr.length<12){arr.push(1);buildParams();render();};};
+    var dBtn=document.createElement('button');dBtn.className='zoom-btn';dBtn.textContent='-';dBtn.style.fontSize='16px';
+    dBtn.onclick=function(){if(arr.length>2){arr.pop();buildParams();render();};};
+    btns.appendChild(aBtn);btns.appendChild(dBtn);hdr.appendChild(hl);hdr.appendChild(btns);wrap.appendChild(hdr);
+    arr.forEach(function(val,i){
+      var r2=document.createElement('div');r2.style.cssText='display:flex;align-items:center;gap:6px;margin-bottom:3px';
+      var lb=document.createElement('div');lb.style.cssText='font-size:10px;color:var(--text2);width:20px;flex-shrink:0;text-align:right';lb.textContent=(isCol?'C':'R')+(i+1);
+      var sl=document.createElement('input');sl.type='range';sl.min=1;sl.max=8;sl.step=1;sl.value=val;sl.style.cssText='flex:1;margin-bottom:0';
+      var vl=document.createElement('div');vl.style.cssText='font-size:11px;color:var(--accent2);font-weight:700;width:14px;text-align:right';vl.textContent=val;
+      sl.oninput=(function(idx){return function(e){arr[idx]=parseInt(e.target.value);e.target.nextSibling.textContent=arr[idx];render();};})(i);
+      r2.appendChild(lb);r2.appendChild(sl);r2.appendChild(vl);wrap.appendChild(r2);
+    });
+    cont.appendChild(wrap);
   }
-  select('badgeType','Shape Type',[
+  // ── Shape section
+  var shapeHdr=document.createElement('div');shapeHdr.className='panel-title';shapeHdr.textContent='Shape';cont.appendChild(shapeHdr);
+  selectB('badgeType','Type',[
     {v:'star', l:'Starburst (sharp spikes)'},
     {v:'sun',  l:'Sun (smooth rays)'},
-    {v:'cog',  l:'Cog / Sawtooth circle'},
+    {v:'cog',  l:'Cog / Sawtooth'},
     {v:'wavy', l:'Wavy Blob'}
-  ]);
-  slider('badgeSpikes','Spikes / Teeth',4,32,1);
-  slider('badgeOuterR','Outer Radius %',30,98,1);
-  slider('badgeInnerRatio','Inner Ratio %',10,90,1);
+  ], false);
+  sliderB('badgeSpikes','Spikes / Teeth',4,32,1);
+  sliderB('badgeOuterR','Outer Radius %',30,98,1);
+  sliderB('badgeInnerRatio','Inner Ratio %',10,90,1);
+  // ── Face pattern section
+  var faceHdr=document.createElement('div');faceHdr.className='panel-title';faceHdr.style.marginTop='12px';faceHdr.textContent='Face Pattern';cont.appendChild(faceHdr);
+  var ft=p.badgeFaceType||'solid';
+  selectB('badgeFaceType','Type',[
+    {v:'solid',     l:'Solid color'},
+    {v:'stripes-v', l:'Vertical stripes'},
+    {v:'stripes-h', l:'Horizontal stripes'},
+    {v:'checker',   l:'Checker'},
+    {v:'vargrid',   l:'Variable grid'}
+  ], true);
+  // Conditional controls per face type
+  if(ft==='stripes-v'||ft==='stripes-h'){
+    sliderB('badgeStripes','Stripe Count',2,24,1);
+  }
+  if(ft==='checker'){
+    sliderB('badgeCellSize','Cell Size',6,120,2);
+  }
+  if(ft==='vargrid'){
+    bandEditorB('Columns (widths)',p.varGridCols,true);
+    bandEditorB('Rows (heights)',p.varGridRows,false);
+  }
 }
 function buildPresets(){
   var cont=document.getElementById('presetPalettes');cont.innerHTML='';
