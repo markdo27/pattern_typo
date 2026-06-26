@@ -203,7 +203,11 @@ var state = {
     splitHTopRatio:55, splitHMidRatio:12, splitHBotRatio:30,
     splitHDiamondSize:45, splitHStripeCount:24,
     showcaseCount:8,
-    showcasePatterns:['stripes-v','plaid','checker','woven','grid','vargrid','dot-grid','split-h']
+    showcasePatterns:['stripes-v','plaid','checker','woven','grid','vargrid','dot-grid','split-h'],
+    emblemSides:true,
+    emblemRays:16,
+    emblemCloverSize:70,
+    emblemCenterSize:30
   }
 };
 var DEFAULT_PARAMS = JSON.parse(JSON.stringify(state.params));
@@ -227,7 +231,8 @@ var PATTERNS = [
   {id:'split-v',    label:'Split V',   icon:tSplitV},
   {id:'dot-grid',   label:'Dot Grid',  icon:tDotGrid},
   {id:'split-h',    label:'Split H',   icon:tSplitH},
-  {id:'showcase',   label:'Showcase',  icon:tShowcase}
+  {id:'showcase',   label:'Showcase',  icon:tShowcase},
+  {id:'emblem',     label:'Emblem',    icon:tEmblem}
 ];
 var ROLES = {
   'stripes-v':[{k:'bg',l:'Background'},{k:'fg1',l:'Stripe 1'},{k:'fg2',l:'Stripe 2'},{k:'fg3',l:'Stripe 3'},{k:'fg4',l:'Stripe 4'}],
@@ -247,7 +252,8 @@ var ROLES = {
   'split-v':[{k:'bg',l:'Default BG'}],
   'dot-grid':[{k:'bg',l:'Background'},{k:'fg1',l:'Border'},{k:'fg2',l:'Bands (Red)'},{k:'fg3',l:'Lines (Blue)'},{k:'fg4',l:'Dots (Pink)'}],
   'split-h':[{k:'bg',l:'Top BG'},{k:'fg1',l:'Top Diamond'},{k:'fg2',l:'Middle Band'},{k:'fg3',l:'Bottom Stripe 1'},{k:'fg4',l:'Bottom Stripe 2'},{k:'fg5',l:'Bottom Thin Band'}],
-  'showcase':[]
+  'showcase':[],
+  'emblem':[{k:'bg',l:'Bg Sector 1'},{k:'fg1',l:'Bg Sector 2 / Fan Ray 1 / Square BG'},{k:'fg2',l:'Fan Ray 2 / Center Symbol / Border Checker 1'},{k:'fg3',l:'Clover Ray 1 / Border Icons'},{k:'fg4',l:'Clover Ray 2'},{k:'fg5',l:'Border Checker 2'}]
 };
 var PRESETS = [
   {name:'Dicaphe',   colors:['#1e0c02','#0d8018','#1a42cc','#c400ca','#f03525','#fff0a8','#ff0f7e','#ffbe00']},
@@ -372,6 +378,28 @@ function tShowcase(){
   for(var i=0; i<4; i++) r+='<line x1="32" y1="'+(16+i*8)+'" x2="48" y2="'+(16+i*8)+'" stroke="'+ci(0)+'" stroke-width="1.5"/>';
   r+='<rect x="48" y="16" width="16" height="32" fill="'+ci(2)+'"/>';
   r+='<polygon points="48,16 64,32 48,48" fill="'+ci(1)+'"/>';
+  return ts(r);
+}
+function tEmblem(){
+  var r='<rect width="64" height="64" fill="'+ci(0)+'"/>';
+  r+='<polygon points="8,8 56,8 32,32" fill="'+ci(1)+'"/>';
+  r+='<polygon points="8,56 56,56 32,32" fill="'+ci(1)+'"/>';
+  r+='<circle cx="20" cy="20" r="10" fill="'+ci(2)+'"/>';
+  r+='<circle cx="44" cy="20" r="10" fill="'+ci(2)+'"/>';
+  r+='<circle cx="20" cy="44" r="10" fill="'+ci(2)+'"/>';
+  r+='<circle cx="44" cy="44" r="10" fill="'+ci(2)+'"/>';
+  r+='<circle cx="32" cy="22" r="11" fill="'+ci(3)+'"/>';
+  r+='<circle cx="32" cy="42" r="11" fill="'+ci(3)+'"/>';
+  r+='<circle cx="22" cy="32" r="11" fill="'+ci(3)+'"/>';
+  r+='<circle cx="42" cy="32" r="11" fill="'+ci(3)+'"/>';
+  r+='<rect x="25" y="25" width="14" height="14" fill="'+ci(1)+'"/>';
+  r+='<circle cx="32" cy="32" r="4" fill="'+ci(2)+'"/>';
+  for(var i=0; i<8; i++){
+    r+='<rect x="0" y="'+(i*8)+'" width="4" height="4" fill="'+(i%2===0?ci(2):ci(5))+'"/>';
+    r+='<rect x="4" y="'+(i*8+4)+'" width="4" height="4" fill="'+(i%2===0?ci(2):ci(5))+'"/>';
+    r+='<rect x="56" y="'+(i*8)+'" width="4" height="4" fill="'+(i%2===0?ci(2):ci(5))+'"/>';
+    r+='<rect x="60" y="'+(i*8+4)+'" width="4" height="4" fill="'+(i%2===0?ci(2):ci(5))+'"/>';
+  }
   return ts(r);
 }
 
@@ -803,6 +831,124 @@ function genSplitH(w,h,p){
   }
   return r;
 }
+function genEmblem(w, h, p){
+  var showBorders = p.emblemSides !== false;
+  var borderW = showBorders ? Math.round(w * 0.12) : 0;
+  var cx = w / 2;
+  var cy = h / 2;
+  var W_c = w - 2 * borderW;
+  var rx = W_c / 2;
+  var ry = h / 2;
+  var rMax = Math.min(rx, ry);
+  var cBg = gc('bg');
+  var cFg1 = gc('fg1');
+  var cFg2 = gc('fg2');
+  var cFg3 = gc('fg3');
+  var cFg4 = gc('fg4');
+  var cFg5 = gc('fg5');
+  var r = '';
+  if(showBorders && borderW > 0){
+    r += '<rect x="0" y="0" width="' + borderW + '" height="' + h + '" fill="' + cBg + '"/>';
+    var bw = borderW / 2;
+    var numRows = Math.floor((h - 2 * borderW) / bw);
+    var rowH = (h - 2 * borderW) / numRows;
+    for(var row=0; row<numRows; row++){
+      for(var col=0; col<2; col++){
+        var rx_box = col * bw;
+        var ry_box = borderW + row * rowH;
+        var fillClr = ((row + col) % 2 === 0) ? cFg2 : cFg5;
+        r += '<rect x="' + Math.round(rx_box) + '" y="' + Math.round(ry_box) + '" width="' + Math.ceil(bw) + '" height="' + Math.ceil(rowH) + '" fill="' + fillClr + '"/>';
+      }
+    }
+    r += '<g transform="translate(0, 0) scale(' + (borderW / 100) + ')">';
+    r += '<line x1="50" y1="80" x2="50" y2="50" stroke="' + cFg3 + '" stroke-width="10" stroke-linecap="round"/>';
+    r += '<line x1="50" y1="50" x2="25" y2="25" stroke="' + cFg3 + '" stroke-width="10" stroke-linecap="round"/>';
+    r += '<line x1="50" y1="50" x2="75" y2="25" stroke="' + cFg3 + '" stroke-width="10" stroke-linecap="round"/>';
+    r += '</g>';
+    r += '<g transform="translate(0, ' + (h - borderW) + ') scale(' + (borderW / 100) + ')">';
+    r += '<path d="M 25,80 L 25,45 A 25,25 0 0,1 75,45 L 75,80 Z" fill="' + cFg3 + '"/>';
+    r += '</g>';
+    var rx0_right = w - borderW;
+    r += '<rect x="' + rx0_right + '" y="0" width="' + borderW + '" height="' + h + '" fill="' + cBg + '"/>';
+    for(var row=0; row<numRows; row++){
+      for(var col=0; col<2; col++){
+        var rx_box = rx0_right + col * bw;
+        var ry_box = borderW + row * rowH;
+        var fillClr = ((row + col) % 2 === 0) ? cFg2 : cFg5;
+        r += '<rect x="' + Math.round(rx_box) + '" y="' + Math.round(ry_box) + '" width="' + Math.ceil(bw) + '" height="' + Math.ceil(rowH) + '" fill="' + fillClr + '"/>';
+      }
+    }
+    r += '<g transform="translate(' + rx0_right + ', 0) scale(' + (borderW / 100) + ')">';
+    r += '<circle cx="50" cy="35" r="14" fill="' + cFg3 + '"/>';
+    r += '<circle cx="50" cy="65" r="14" fill="' + cFg3 + '"/>';
+    r += '<circle cx="35" cy="50" r="14" fill="' + cFg3 + '"/>';
+    r += '<circle cx="65" cy="50" r="14" fill="' + cFg3 + '"/>';
+    r += '</g>';
+    r += '<g transform="translate(' + rx0_right + ', ' + (h - borderW) + ') scale(' + (borderW / 100) + ')">';
+    r += '<path d="M 25,25 L 37,75 L 50,45 L 63,75 L 75,25" stroke="' + cFg3 + '" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+    r += '</g>';
+  }
+  var centralClipId = 'carea_clip_' + Math.floor(Math.random()*10000000);
+  r += '<defs><clipPath id="' + centralClipId + '"><rect x="' + borderW + '" y="0" width="' + W_c + '" height="' + h + '"/></clipPath></defs>';
+  r += '<g clip-path="url(#' + centralClipId + ')">';
+  r += '<rect x="' + borderW + '" y="0" width="' + W_c + '" height="' + h + '" fill="' + cBg + '"/>';
+  r += '<polygon points="' + borderW + ',0 ' + (w - borderW) + ',0 ' + cx + ',' + cy + '" fill="' + cFg1 + '"/>';
+  r += '<polygon points="' + borderW + ',' + h + ' ' + (w - borderW) + ',' + h + ' ' + cx + ',' + cy + '" fill="' + cFg1 + '"/>';
+  var r_fan = rMax / 2;
+  var numRays = p.emblemRays || 16;
+  var fanCenters = [
+    {x: cx - r_fan, y: 0}, {x: cx + r_fan, y: 0},
+    {x: cx - r_fan, y: h}, {x: cx + r_fan, y: h},
+    {x: borderW, y: cy - r_fan}, {x: borderW, y: cy + r_fan},
+    {x: w - borderW, y: cy - r_fan}, {x: w - borderW, y: cy + r_fan}
+  ];
+  fanCenters.forEach(function(center){
+    var fx = center.x, fy = center.y;
+    for(var i=0; i<numRays; i++){
+      var a1 = i * 2 * Math.PI / numRays;
+      var a2 = (i + 1) * 2 * Math.PI / numRays;
+      var fillClr = (i % 2 === 0) ? cFg1 : cFg2;
+      r += '<polygon points="' + fx + ',' + fy + ' ' +
+           (fx + r_fan * Math.cos(a1)).toFixed(1) + ',' + (fy + r_fan * Math.sin(a1)).toFixed(1) + ' ' +
+           (fx + r_fan * Math.cos(a2)).toFixed(1) + ',' + (fy + r_fan * Math.sin(a2)).toFixed(1) + '" fill="' + fillClr + '"/>';
+    }
+  });
+  var cloverClipId = 'clover_clip_' + Math.floor(Math.random()*10000000);
+  var cloverSz = (p.emblemCloverSize || 70) / 100;
+  var offset = rMax * 0.25 * cloverSz;
+  var rL = rMax * 0.35 * cloverSz;
+  r += '<defs><clipPath id="' + cloverClipId + '">';
+  r += '<circle cx="' + cx + '" cy="' + (cy - offset) + '" r="' + rL + '"/>';
+  r += '<circle cx="' + cx + '" cy="' + (cy + offset) + '" r="' + rL + '"/>';
+  r += '<circle cx="' + (cx - offset) + '" cy="' + cy + '" r="' + rL + '"/>';
+  r += '<circle cx="' + (cx + offset) + '" cy="' + cy + '" r="' + rL + '"/>';
+  r += '</clipPath></defs>';
+  r += '<g clip-path="url(#' + cloverClipId + ')">';
+  var numCloverRays = numRays * 2;
+  for(var i=0; i<numCloverRays; i++){
+    var a1 = i * 2 * Math.PI / numCloverRays;
+    var a2 = (i + 1) * 2 * Math.PI / numCloverRays;
+    var fillClr = (i % 2 === 0) ? cFg3 : cFg4;
+    r += '<polygon points="' + cx + ',' + cy + ' ' +
+         (cx + rMax * 2 * Math.cos(a1)).toFixed(1) + ',' + (cy + rMax * 2 * Math.sin(a1)).toFixed(1) + ' ' +
+         (cx + rMax * 2 * Math.cos(a2)).toFixed(1) + ',' + (cy + rMax * 2 * Math.sin(a2)).toFixed(1) + '" fill="' + fillClr + '"/>';
+  }
+  r += '</g>';
+  var centerSz = rMax * (p.emblemCenterSize || 30) / 100 * 2;
+  var sx = cx - centerSz / 2;
+  var sy = cy - centerSz / 2;
+  r += '<rect x="' + sx + '" y="' + sy + '" width="' + centerSz + '" height="' + centerSz + '" fill="' + cFg1 + '"/>';
+  r += '<g transform="translate(' + cx + ', ' + cy + ') scale(' + (centerSz / 100) + ')">';
+  r += '<path d="M 0,-30 A 30,30 0 0,0 0,30" fill="none" stroke="' + cFg2 + '" stroke-width="10" stroke-linecap="round"/>';
+  r += '<path d="M 0,-15 A 15,15 0 0,0 0,15" fill="none" stroke="' + cFg2 + '" stroke-width="10" stroke-linecap="round"/>';
+  r += '<circle cx="22" cy="-20" r="16" fill="' + cFg2 + '"/>';
+  r += '<circle cx="22" cy="-20" r="6" fill="' + cFg1 + '"/>';
+  r += '<circle cx="22" cy="20" r="16" fill="' + cFg2 + '"/>';
+  r += '<circle cx="22" cy="20" r="6" fill="' + cFg1 + '"/>';
+  r += '</g>';
+  r += '</g>';
+  return r;
+}
 function genShowcase(w, h, p){
   var N = p.showcaseCount || 8;
   var r = '';
@@ -812,7 +958,7 @@ function genShowcase(w, h, p){
     'dots': genDots, 'woven': genWoven, 'grid': genGrid,
     'mixed': genMixed, 'stripes-mix': genVarStripes, 'halfcircle': genScallop,
     'vargrid': genVarGrid, 'badge': genBadge, 'split-v': genSplitV,
-    'dot-grid': genDotGrid, 'split-h': genSplitH
+    'dot-grid': genDotGrid, 'split-h': genSplitH, 'emblem': genEmblem
   };
   for(var i=0; i<N; i++){
     var patId = p.showcasePatterns[i] || 'stripes-v';
@@ -830,7 +976,7 @@ function genShowcase(w, h, p){
 }
 function genPattern(){
   var w=state.canvasW,h=state.canvasH,p=state.params;
-  var map={'stripes-v':genSV,'stripes-h':genSH,'stripes-d':genSD,'plaid':genPlaid,'checker':genChecker,'diamond':genDiamond,'dots':genDots,'woven':genWoven,'grid':genGrid,'mixed':genMixed,'stripes-mix':genVarStripes,'halfcircle':genScallop,'vargrid':genVarGrid,'badge':genBadge,'split-v':genSplitV,'dot-grid':genDotGrid,'split-h':genSplitH,'showcase':genShowcase};
+  var map={'stripes-v':genSV,'stripes-h':genSH,'stripes-d':genSD,'plaid':genPlaid,'checker':genChecker,'diamond':genDiamond,'dots':genDots,'woven':genWoven,'grid':genGrid,'mixed':genMixed,'stripes-mix':genVarStripes,'halfcircle':genScallop,'vargrid':genVarGrid,'badge':genBadge,'split-v':genSplitV,'dot-grid':genDotGrid,'split-h':genSplitH,'showcase':genShowcase,'emblem':genEmblem};
   var inner = (map[state.pattern]||genSV)(w,h,p);
   if(state.tiledPreview){
     return '<defs><pattern id="tilePattern" width="'+w+'" height="'+h+'" patternUnits="userSpaceOnUse">' +
@@ -1005,6 +1151,56 @@ function buildParams(){
   if(pt==='dot-grid') buildDotGridUI(cont,p);
   if(pt==='split-h') buildSplitHUI(cont,p);
   if(pt==='showcase') buildShowcaseUI(cont,p);
+  if(pt==='emblem') buildEmblemUI(cont,p);
+}
+function buildEmblemUI(cont, p){
+  var title = document.createElement('div');
+  title.className = 'panel-title';
+  title.style.marginTop = '10px';
+  title.textContent = 'Emblem Settings';
+  cont.appendChild(title);
+
+  function sliderE(key,label,min,max,step){
+    var row=document.createElement('div');row.className='ctrl-row';
+    var lbl=document.createElement('div');lbl.className='ctrl-label';lbl.textContent=label;
+    var val=document.createElement('div');val.className='ctrl-value';val.id='v_em'+key;val.textContent=p[key]!=null?p[key]:min;
+    row.appendChild(lbl);row.appendChild(val);cont.appendChild(row);
+    var sl=document.createElement('input');sl.type='range';sl.min=min;sl.max=max;sl.step=step||1;sl.value=p[key]!=null?p[key]:min;
+    sl.oninput=function(e){p[key]=parseFloat(e.target.value);document.getElementById('v_em'+key).textContent=p[key];render();};
+    cont.appendChild(sl);
+  }
+  
+  sliderE('emblemRays','Ray Count',8,36,2);
+  sliderE('emblemCloverSize','Clover Size %',40,90,1);
+  sliderE('emblemCenterSize','Center Square %',15,50,1);
+
+  var rowSides = document.createElement('div');
+  rowSides.className = 'ctrl-row';
+  rowSides.style.flexDirection = 'column';
+  rowSides.style.alignItems = 'flex-start';
+  rowSides.style.gap = '4px';
+  var lblSides = document.createElement('div');
+  lblSides.className = 'ctrl-label';
+  lblSides.textContent = 'Side Borders';
+  var selSides = document.createElement('select');
+  selSides.className = 'select-ctrl';
+  var opt1 = document.createElement('option');
+  opt1.value = 'true';
+  opt1.textContent = 'Show Checker Columns';
+  if(p.emblemSides !== false) opt1.selected = true;
+  var opt2 = document.createElement('option');
+  opt2.value = 'false';
+  opt2.textContent = 'Hide Border Columns';
+  if(p.emblemSides === false) opt2.selected = true;
+  selSides.appendChild(opt1);
+  selSides.appendChild(opt2);
+  selSides.onchange = function(e){
+    p.emblemSides = (e.target.value === 'true');
+    render();
+  };
+  rowSides.appendChild(lblSides);
+  rowSides.appendChild(selSides);
+  cont.appendChild(rowSides);
 }
 function buildShowcaseUI(cont, p){
   var title = document.createElement('div');
@@ -1495,6 +1691,12 @@ function randomizeParams(){
     for(var i=0; i<p.showcaseCount; i++){
       p.showcasePatterns.push(available[Math.floor(Math.random()*available.length)].id);
     }
+  }
+  if(pt==='emblem'){
+    p.emblemRays = (Math.floor(Math.random()*15)+4)*2;
+    p.emblemCloverSize = Math.floor(Math.random()*50)+40;
+    p.emblemCenterSize = Math.floor(Math.random()*35)+15;
+    p.emblemSides = Math.random() > 0.3;
   }
   Object.keys(p).filter(function(k){return k.endsWith('Color');}).forEach(function(k){
     p[k] = Math.floor(Math.random()*state.colors.length);
