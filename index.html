@@ -118,6 +118,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   </div>
   <div class="spacer"></div>
   <div class="header-actions">
+    <button class="btn btn-secondary" id="tileToggleBtn" onclick="toggleTilePreview()">&#8862; Tile Preview</button>
     <button class="btn btn-secondary" onclick="copyAsSVG()">&#8669; Copy SVG</button>
     <button class="btn btn-primary" onclick="exportSVG()">&#8595; Export SVG</button>
   </div>
@@ -176,7 +177,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 // ── STATE
 var state = {
   pattern: 'stripes-v',
-  canvasW: 600, canvasH: 600, zoom: 100,
+  canvasW: 600, canvasH: 600, zoom: 100, tiledPreview: false,
   colors: ['#ff3eb5','#4a8f3f','#ff8c00','#f5e642','#6baed6','#ffffff'],
   params: {
     stripeCount:8, stripeWidths:'equal',
@@ -198,6 +199,7 @@ var state = {
     splitHDiamondSize:45, splitHStripeCount:24
   }
 };
+var DEFAULT_PARAMS = JSON.parse(JSON.stringify(state.params));
 
 // ── PATTERN DEFS
 var PATTERNS = [
@@ -781,20 +783,31 @@ function genSplitH(w,h,p){
 function genPattern(){
   var w=state.canvasW,h=state.canvasH,p=state.params;
   var map={'stripes-v':genSV,'stripes-h':genSH,'stripes-d':genSD,'plaid':genPlaid,'checker':genChecker,'diamond':genDiamond,'dots':genDots,'woven':genWoven,'grid':genGrid,'mixed':genMixed,'stripes-mix':genVarStripes,'halfcircle':genScallop,'vargrid':genVarGrid,'badge':genBadge,'split-v':genSplitV,'dot-grid':genDotGrid,'split-h':genSplitH};
-  return (map[state.pattern]||genSV)(w,h,p);
+  var inner = (map[state.pattern]||genSV)(w,h,p);
+  if(state.tiledPreview){
+    return '<defs><pattern id="tilePattern" width="'+w+'" height="'+h+'" patternUnits="userSpaceOnUse">' +
+           inner +
+           '</pattern></defs>' +
+           '<rect width="100%" height="100%" fill="url(#tilePattern)"/>';
+  }
+  return inner;
 }
 
 // ── RENDER
 function render(){
   var svg=document.getElementById('patternSVG');
-  svg.setAttribute('width',state.canvasW);svg.setAttribute('height',state.canvasH);
-  svg.setAttribute('viewBox','0 0 '+state.canvasW+' '+state.canvasH);
+  var scale = state.tiledPreview ? 3 : 1;
+  var rw = state.canvasW * scale;
+  var rh = state.canvasH * scale;
+  svg.setAttribute('width',rw);svg.setAttribute('height',rh);
+  svg.setAttribute('viewBox','0 0 '+rw+' '+rh);
   svg.innerHTML=genPattern();
   updateSize();refreshThumbs();
 }
 function updateSize(){
   var wr=document.getElementById('canvasWrapper'),z=state.zoom/100;
-  wr.style.width=(state.canvasW*z)+'px';wr.style.height=(state.canvasH*z)+'px';
+  var scale = state.tiledPreview ? 3 : 1;
+  wr.style.width=(state.canvasW*scale*z)+'px';wr.style.height=(state.canvasH*scale*z)+'px';
   var svg=document.getElementById('patternSVG');svg.style.width='100%';svg.style.height='100%';
 }
 function refreshThumbs(){
@@ -867,7 +880,29 @@ function buildColorRoles(){
   });
 }
 function buildParams(){
-  var cont=document.getElementById('patternParams');cont.innerHTML='<div class="panel-title">Parameters</div>';
+  var cont=document.getElementById('patternParams');
+  cont.innerHTML='<div class="panel-title">Parameters</div>';
+  var actRow=document.createElement('div');
+  actRow.style.cssText='display:flex;gap:6px;margin-bottom:14px;';
+  var resetBtn=document.createElement('button');
+  resetBtn.className='btn btn-secondary';
+  resetBtn.style.cssText='padding:5px 8px;font-size:11px;flex:1;justify-content:center;';
+  resetBtn.innerHTML='&#8634; Reset';
+  resetBtn.onclick=resetParams;
+  var randBtn=document.createElement('button');
+  randBtn.className='btn btn-secondary';
+  randBtn.style.cssText='padding:5px 8px;font-size:11px;flex:1;justify-content:center;';
+  randBtn.innerHTML='&#2684; Layout';
+  randBtn.onclick=randomizeParams;
+  var colorBtn=document.createElement('button');
+  colorBtn.className='btn btn-secondary';
+  colorBtn.style.cssText='padding:5px 8px;font-size:11px;flex:1;justify-content:center;';
+  colorBtn.innerHTML='&#2728; Colors';
+  colorBtn.onclick=randomizeColors;
+  actRow.appendChild(resetBtn);
+  actRow.appendChild(randBtn);
+  actRow.appendChild(colorBtn);
+  cont.appendChild(actRow);
   var p=state.params;
   function slider(key,label,min,max,step){
     var row=document.createElement('div');row.className='ctrl-row';
@@ -1167,6 +1202,122 @@ function buildPresets(){
     };
     cont.appendChild(div);
   });
+}
+function toggleTilePreview(){
+  state.tiledPreview = !state.tiledPreview;
+  var btn = document.getElementById('tileToggleBtn');
+  if(state.tiledPreview){
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.color = 'var(--accent)';
+    btn.innerHTML = '&#8863; Single Preview';
+  } else {
+    btn.style.borderColor = '';
+    btn.style.color = '';
+    btn.innerHTML = '&#8862; Tile Preview';
+  }
+  render();
+}
+function resetParams(){
+  state.params = JSON.parse(JSON.stringify(DEFAULT_PARAMS));
+  render();
+  buildColorRoles();
+  buildParams();
+  showToast('\u267b', 'Parameters reset');
+}
+function randomizeParams(){
+  var p = state.params;
+  var pt = state.pattern;
+  if(['stripes-v','stripes-h','stripes-d','stripes-mix'].indexOf(pt)>=0) p.stripeCount = Math.floor(Math.random()*12)+3;
+  if(pt==='stripes-v') p.stripeWidths = Math.random()>0.5?'equal':'alternating';
+  if(['checker','diamond','grid'].indexOf(pt)>=0){
+    p.checkerSize = Math.floor(Math.random()*40)+16;
+    p.checkerColors = Math.floor(Math.random()*(Math.min(state.colors.length,4)-1))+2;
+  }
+  if(pt==='plaid'){ p.plaidDensityH = Math.floor(Math.random()*10)+3; p.plaidDensityV = Math.floor(Math.random()*10)+3; }
+  if(pt==='diamond') p.diamondSize = Math.floor(Math.random()*60)+20;
+  if(pt==='dots'||pt==='halfcircle'){
+    p.dotSpacing = Math.floor(Math.random()*80)+40;
+    p.dotRadius = Math.floor(Math.random()*(p.dotSpacing/2-4))+4;
+  }
+  if(pt==='dots') p.dotRows = Math.random()>0.5?'square':'offset';
+  if(pt==='woven'){ p.wovenCount = Math.floor(Math.random()*8)+4; p.wovenGap = Math.floor(Math.random()*6); }
+  if(pt==='mixed'){ p.blockRows = Math.floor(Math.random()*4)+1; p.blockCols = Math.floor(Math.random()*4)+1; }
+  if(pt==='vargrid'){
+    var colLen = Math.floor(Math.random()*6)+3, rowLen = Math.floor(Math.random()*5)+3;
+    p.varGridCols = []; for(var i=0;i<colLen;i++) p.varGridCols.push(Math.floor(Math.random()*4)+1);
+    p.varGridRows = []; for(var i=0;i<rowLen;i++) p.varGridRows.push(Math.floor(Math.random()*4)+1);
+    p.varGridColors = Math.floor(Math.random()*(Math.min(state.colors.length,4)-1))+2;
+  }
+  if(pt==='badge'){
+    var types = ['star','sun','cog','wavy']; p.badgeType = types[Math.floor(Math.random()*types.length)];
+    p.badgeSpikes = Math.floor(Math.random()*20)+6;
+    p.badgeOuterR = Math.floor(Math.random()*40)+50;
+    p.badgeInnerRatio = Math.floor(Math.random()*60)+20;
+    var ftypes = ['solid','stripes-v','stripes-h','checker','vargrid']; p.badgeFaceType = ftypes[Math.floor(Math.random()*ftypes.length)];
+    p.badgeStripes = Math.floor(Math.random()*12)+4;
+    p.badgeCellSize = Math.floor(Math.random()*30)+10;
+  }
+  if(pt==='split-v'){
+    var colLen = Math.floor(Math.random()*4)+3;
+    p.splitVCols = []; p.splitVStyles = []; p.splitVColors = [];
+    var styles = ['solid','stripes-h-thick','stripes-h-thin','blocks','stripes-v'];
+    for(var i=0;i<colLen;i++){
+      p.splitVCols.push(Math.floor(Math.random()*8)+1);
+      p.splitVStyles.push(styles[Math.floor(Math.random()*styles.length)]);
+      var c1 = Math.floor(Math.random()*state.colors.length);
+      var c2 = (c1+Math.floor(Math.random()*(state.colors.length-1))+1)%state.colors.length;
+      p.splitVColors.push([c1,c2]);
+    }
+  }
+  if(pt==='dot-grid'){
+    p.dotSpacing = Math.floor(Math.random()*80)+50;
+    p.dotRadius = Math.floor(Math.random()*(p.dotSpacing*0.3))+5;
+    p.dotGridBandW = Math.floor(Math.random()*(p.dotSpacing*0.15))+4;
+    p.dotGridLineW = Math.floor(Math.random()*8)+1;
+    p.dotGridBorderW = Math.floor(Math.random()*20)+4;
+  }
+  if(pt==='split-h'){
+    p.splitHTopRatio = Math.floor(Math.random()*40)+20;
+    p.splitHMidRatio = Math.floor(Math.random()*15)+5;
+    p.splitHBotRatio = Math.floor(Math.random()*30)+15;
+    p.splitHDiamondSize = Math.floor(Math.random()*50)+20;
+    p.splitHStripeCount = (Math.floor(Math.random()*16)+6)*2;
+  }
+  Object.keys(p).filter(function(k){return k.endsWith('Color');}).forEach(function(k){
+    p[k] = Math.floor(Math.random()*state.colors.length);
+  });
+  render();
+  buildColorRoles();
+  buildParams();
+  showToast('\u2684', 'Layout randomized!');
+}
+function randomizeColors(){
+  var baseHue = Math.floor(Math.random()*360);
+  var count = state.colors.length;
+  var newColors = [];
+  for(var i=0;i<count;i++){
+    var h = (baseHue + (i*(360/count)))%360;
+    var s = Math.floor(Math.random()*30)+60;
+    var l = Math.floor(Math.random()*25)+45;
+    if(i===count-1){ l = Math.random()>0.5?95:12; s = Math.random()>0.5?0:20; }
+    newColors.push(hslToHex(h,s,l));
+  }
+  state.colors = newColors;
+  render();
+  buildPalette();
+  buildColorRoles();
+  if(state.pattern==='split-v') buildParams();
+  showToast('\u2728', 'Colors randomized!');
+}
+function hslToHex(h,s,l){
+  l /= 100;
+  var a = s*Math.min(l,1-l)/100;
+  var f = function(n){
+    var k = (n+h/30)%12;
+    var color = l - a*Math.max(Math.min(k-3,9-k,1),-1);
+    return Math.round(255*color).toString(16).padStart(2,'0');
+  };
+  return '#'+f(0)+f(8)+f(4);
 }
 
 // ── ZOOM
