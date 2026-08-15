@@ -5,28 +5,35 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Pattern Studio – Grid Play Creator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
+<!-- Inter and Playfair Display are kept because emblem, badge and typographic
+     artwork is rendered into the exported SVG with them. -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#07070a;
-  --surface:rgba(18,18,28,0.72);
-  --surface-solid:#12121a;
-  --surface2:rgba(255,255,255,0.03);
-  --surface3:rgba(255,255,255,0.07);
-  --border:rgba(255,255,255,0.06);
-  --border2:rgba(255,255,255,0.12);
-  --text:#f3f4f6;
-  --text2:#9ca3af;
-  --accent:#6366f1;
-  --accent-glow:rgba(99,102,241,0.3);
-  --accent2:#f59e0b;
-  --radius:16px;
-  --radius-sm:8px;
-  --shadow:0 12px 40px rgba(0,0,0,0.5);
-  --shadow-sm:0 4px 12px rgba(0,0,0,0.3);
-  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  /* Paper/ink. Variable names are unchanged — markup and script reference them
+     inline — only the values moved. --font-sans is now a mono stack; the name
+     stays so existing font-family:var(--font-sans) rules keep resolving. */
+  --bg:#fafafa;
+  --surface:#ffffff;
+  --surface-solid:#ffffff;
+  --surface2:#fafafa;
+  --surface3:#f5f5f5;
+  --border:#e5e5e5;
+  --border2:#0a0a0a;
+  --line:#d4d4d4;
+  --text:#0a0a0a;
+  --text2:#737373;
+  --accent:#0a0a0a;
+  --accent-glow:rgba(10,10,10,0.12);
+  --accent2:#0a0a0a;
+  --radius:0px;
+  --radius-sm:0px;
+  --shadow:none;
+  --shadow-sm:none;
+  --font-sans:'IBM Plex Mono','JetBrains Mono',ui-monospace,SFMono-Regular,monospace;
 }
 body{
   font-family:var(--font-sans);
@@ -39,128 +46,111 @@ body{
   height:100vh;
   position:relative;
 }
-/* BACKGROUND GLOWS */
-.bg-glow{
-  position:absolute;
-  border-radius:50%;
-  filter:blur(140px);
-  pointer-events:none;
-  z-index:0;
-  opacity:0.6;
-}
-.bg-glow-1{
-  left:-10%;
-  top:-10%;
-  width:45vw;
-  height:45vw;
-  background:radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
-}
-.bg-glow-2{
-  right:-10%;
-  bottom:-10%;
-  width:45vw;
-  height:45vw;
-  background:radial-gradient(circle, rgba(168,85,247,0.1) 0%, transparent 70%);
-}
+::selection{background:var(--text);color:var(--bg)}
+
+/* BACKGROUND GLOWS — retired with the dark theme; the divs stay in the markup. */
+.bg-glow{display:none}
+
 /* HEADER */
 header{
   position:absolute;
-  left:16px;
-  right:16px;
-  top:12px;
-  height:52px;
+  left:0;
+  right:0;
+  top:0;
+  height:56px;
   display:flex;
   align-items:center;
   gap:16px;
   padding:0 20px;
-  background:var(--surface);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  border:1px solid var(--border);
-  border-radius:14px;
+  background:var(--bg);
+  border:none;
+  border-bottom:1px solid var(--text);
+  border-radius:0;
   flex-shrink:0;
   z-index:10;
-  box-shadow:var(--shadow);
+  box-shadow:none;
 }
 .logo{
   font-size:16px;
   font-weight:700;
-  letter-spacing:1px;
-  background:linear-gradient(135deg,#a78bfa,#6366f1);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  background-clip:text;
+  letter-spacing:-0.02em;
+  color:var(--text);
+  -webkit-text-fill-color:var(--text);
+  background:none;
   flex-shrink:0;
 }
 .sep{
   width:1px;
   height:20px;
-  background:var(--border);
+  background:var(--line);
   flex-shrink:0;
 }
 .ctrl-group{
   display:flex;
   align-items:center;
   gap:8px;
-  font-size:12px;
+  font-size:11px;
   color:var(--text2);
 }
 header label{
   font-size:11px;
-  font-weight:500;
+  font-weight:400;
   color:var(--text2);
   white-space:nowrap;
   text-transform:uppercase;
-  letter-spacing:0.5px;
+  letter-spacing:0.15em;
 }
 header input[type=number]{
   width:64px;
   padding:5px 8px;
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:6px;
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:0;
   color:var(--text);
   font-family:var(--font-sans);
   font-size:12px;
   outline:none;
   text-align:center;
-  transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:border-color 0.15s ease;
 }
 header input[type=number]:focus, header input[type=number]:hover{
-  border-color:var(--accent);
-  background:var(--surface3);
+  border-color:var(--text);
+  background:var(--bg);
 }
 .btn{
-  padding:6px 14px;
-  border-radius:8px;
-  border:1px solid transparent;
+  padding:6px 12px;
+  border-radius:0;
+  border:1px solid var(--text);
   font-family:var(--font-sans);
-  font-size:12px;
-  font-weight:500;
+  font-size:11px;
+  font-weight:400;
+  text-transform:uppercase;
+  letter-spacing:0.15em;
   cursor:pointer;
-  transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:background-color 0.15s ease;
   display:flex;
   align-items:center;
   gap:6px;
 }
 .btn-primary{
-  background:linear-gradient(135deg,#6366f1,#7c4dff);
-  color:#fff;
-  box-shadow:0 4px 14px rgba(99,102,241,0.3);
+  background:var(--text);
+  color:var(--bg);
+  box-shadow:none;
 }
 .btn-primary:hover{
-  transform:translateY(-1px);
-  box-shadow:0 6px 20px rgba(99,102,241,0.45);
+  background:#262626;
+  transform:none;
+  box-shadow:none;
 }
 .btn-secondary{
-  background:var(--surface2);
+  background:var(--bg);
   color:var(--text);
-  border:1px solid var(--border);
+  border:1px solid var(--text);
 }
 .btn-secondary:hover{
   background:var(--surface3);
-  border-color:var(--accent);
-  color:#fff;
+  border-color:var(--text);
+  color:var(--text);
 }
 header .spacer{flex:1}
 header .header-actions{display:flex;gap:8px}
@@ -181,11 +171,9 @@ header .header-actions{display:flex;gap:8px}
   bottom:16px;
   width:220px;
   background:var(--surface);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
+  border:1px solid var(--text);
+  border-radius:0;
+  box-shadow:none;
   display:flex;
   flex-direction:column;
   overflow-y:auto;
@@ -199,8 +187,8 @@ header .header-actions{display:flex;gap:8px}
 .panel-section:last-child{border-bottom:none}
 .panel-title{
   font-size:10px;
-  font-weight:700;
-  letter-spacing:1.5px;
+  font-weight:400;
+  letter-spacing:0.15em;
   text-transform:uppercase;
   color:var(--text2);
   margin-bottom:12px;
@@ -212,23 +200,23 @@ header .header-actions{display:flex;gap:8px}
 }
 .pattern-thumb{
   aspect-ratio:1;
-  border-radius:10px;
+  border-radius:0;
   border:1px solid var(--border);
   cursor:pointer;
   overflow:hidden;
-  transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  background:rgba(255,255,255,0.01);
+  transition:border-color 0.15s ease;
+  background:var(--surface);
   position:relative;
 }
 .pattern-thumb:hover{
-  border-color:rgba(255,255,255,0.25);
-  transform:translateY(-2px);
-  background:var(--surface2);
+  border-color:#a3a3a3;
+  transform:none;
+  background:var(--surface);
 }
 .pattern-thumb.active{
-  border-color:var(--accent);
-  box-shadow:0 0 0 2px var(--accent-glow);
-  background:var(--surface3);
+  border-color:var(--text);
+  box-shadow:none;
+  background:var(--surface);
 }
 .pattern-thumb svg{width:100%;height:100%;display:block}
 .pattern-thumb .label{
@@ -236,14 +224,15 @@ header .header-actions{display:flex;gap:8px}
   bottom:0;
   left:0;
   right:0;
-  background:rgba(7,7,10,0.85);
+  background:rgba(250,250,250,0.92);
+  border-top:1px solid var(--border);
   font-size:8px;
-  font-weight:600;
+  font-weight:400;
   color:var(--text);
   text-align:center;
   padding:3px 0;
   text-transform:uppercase;
-  letter-spacing:0.5px;
+  letter-spacing:0.1em;
 }
 
 /* CANVAS */
@@ -260,10 +249,10 @@ header .header-actions{display:flex;gap:8px}
 }
 .canvas-wrapper{
   position:relative;
-  box-shadow:0 24px 70px rgba(0,0,0,0.7), 0 0 0 1px var(--border);
-  border-radius:8px;
+  box-shadow:0 0 0 1px var(--text);
+  border-radius:0;
   overflow:hidden;
-  background:var(--bg);
+  background:#ffffff;
   transition:width 0.3s ease, height 0.3s ease;
 }
 #patternSVG{display:block}
@@ -273,31 +262,28 @@ header .header-actions{display:flex;gap:8px}
   left:50%;
   transform:translateX(-50%);
   font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:0.12em;
   color:var(--text2);
   background:var(--surface);
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
-  border:1px solid var(--border);
-  padding:6px 16px;
-  border-radius:30px;
+  border:1px solid var(--line);
+  padding:6px 12px;
+  border-radius:0;
   pointer-events:none;
-  box-shadow:var(--shadow-sm);
+  box-shadow:none;
   z-index:5;
-  letter-spacing:0.3px;
 }
 .zoom-display{
   position:absolute;
   bottom:20px;
   right:312px; /* Adjusted to fit layout */
   font-size:11px;
-  color:var(--text2);
+  color:var(--text);
   background:var(--surface);
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
-  border:1px solid var(--border);
-  padding:5px 12px;
-  border-radius:30px;
-  box-shadow:var(--shadow-sm);
+  border:1px solid var(--line);
+  padding:5px 10px;
+  border-radius:0;
+  box-shadow:none;
   display:flex;
   gap:8px;
   align-items:center;
@@ -306,7 +292,7 @@ header .header-actions{display:flex;gap:8px}
 .zoom-btn{
   background:none;
   border:none;
-  color:var(--text2);
+  color:var(--text);
   cursor:pointer;
   font-size:14px;
   font-weight:600;
@@ -315,7 +301,7 @@ header .header-actions{display:flex;gap:8px}
   font-family:var(--font-sans);
   line-height:1;
 }
-.zoom-btn:hover{color:var(--accent)}
+.zoom-btn:hover{color:var(--text2)}
 
 /* RIGHT PANEL (FLOATING) */
 .panel-right{
@@ -325,50 +311,43 @@ header .header-actions{display:flex;gap:8px}
   bottom:16px;
   width:280px;
   background:var(--surface);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
+  border:1px solid var(--text);
+  border-radius:0;
+  box-shadow:none;
   display:flex;
   flex-direction:column;
   overflow-y:auto;
   z-index:5;
   transition:transform 0.3s ease;
 }
+/* Tabs read as CIRCLE's segmented control: active is inverted, not underlined. */
 .tab-bar{
   display:flex;
-  border-bottom:1px solid var(--border);
-  padding:4px 4px 0 4px;
+  border-bottom:1px solid var(--text);
+  padding:0;
 }
 .tab{
   flex:1;
   padding:10px 4px;
   text-align:center;
   font-size:10px;
-  font-weight:600;
-  color:var(--text2);
+  font-weight:400;
+  color:var(--text);
+  background:var(--bg);
   cursor:pointer;
   position:relative;
-  transition:color 0.2s;
-  letter-spacing:1px;
+  transition:background-color 0.15s ease;
+  letter-spacing:0.15em;
   text-transform:uppercase;
+  border-right:1px solid var(--text);
 }
+.tab:last-child{border-right:none}
 .tab.active{
-  color:#fff;
+  color:var(--bg);
+  background:var(--text);
 }
-.tab.active::after{
-  content:'';
-  position:absolute;
-  bottom:0;
-  left:25%;
-  right:25%;
-  height:2px;
-  background:var(--accent);
-  border-radius:2px;
-  box-shadow:0 0 8px var(--accent);
-}
-.tab:hover:not(.active){color:#fff}
+.tab.active::after{content:none}
+.tab:hover:not(.active){color:var(--text);background:var(--surface3)}
 .tab-content{display:none}
 .tab-content.active{display:block}
 
@@ -380,18 +359,18 @@ header .header-actions{display:flex;gap:8px}
 }
 .color-swatch{
   aspect-ratio:1;
-  border-radius:50%;
-  border:2px solid transparent;
+  border-radius:0;
+  border:1px solid var(--line);
   cursor:pointer;
-  transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:border-color 0.15s ease;
   position:relative;
   overflow:hidden;
   min-height:36px;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.05);
+  box-shadow:none;
 }
 .color-swatch:hover{
-  transform:scale(1.12);
-  border-color:rgba(255,255,255,0.6);
+  transform:none;
+  border-color:var(--text);
 }
 .color-swatch input[type=color]{
   position:absolute;
@@ -408,9 +387,9 @@ header .header-actions{display:flex;gap:8px}
   transform:translate(-50%, -50%);
   width:16px;
   height:16px;
-  border-radius:50%;
-  background:rgba(0,0,0,0.6);
-  color:#fff;
+  border-radius:0;
+  background:var(--text);
+  color:var(--bg);
   font-size:8px;
   display:flex;
   align-items:center;
@@ -421,6 +400,7 @@ header .header-actions{display:flex;gap:8px}
   border:none;
   pointer-events:none;
   font-weight:bold;
+  font-family:var(--font-sans);
 }
 .color-swatch:hover .del{
   opacity:1;
@@ -428,8 +408,8 @@ header .header-actions{display:flex;gap:8px}
 }
 .add-color-btn{
   aspect-ratio:1;
-  border-radius:50%;
-  border:2px dashed var(--border);
+  border-radius:0;
+  border:1px dashed #a3a3a3;
   background:transparent;
   cursor:pointer;
   display:flex;
@@ -437,13 +417,14 @@ header .header-actions{display:flex;gap:8px}
   justify-content:center;
   font-size:18px;
   color:var(--text2);
-  transition:all 0.2s;
+  transition:border-color 0.15s, color 0.15s;
   min-height:36px;
+  font-family:var(--font-sans);
 }
 .add-color-btn:hover{
-  border-color:var(--accent);
-  color:var(--accent);
-  background:rgba(99,102,241,0.05);
+  border-color:var(--text);
+  color:var(--text);
+  background:transparent;
 }
 
 /* PRESETS */
@@ -455,31 +436,33 @@ header .header-actions{display:flex;gap:8px}
 .preset-palette{
   display:flex;
   gap:4px;
-  padding:8px 12px;
-  background:var(--surface2);
-  border-radius:8px;
+  padding:8px 10px;
+  background:var(--surface);
+  border-radius:0;
   cursor:pointer;
   border:1px solid var(--border);
-  transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:border-color 0.15s ease;
   align-items:center;
 }
 .preset-palette:hover{
-  border-color:var(--border2);
-  background:var(--surface3);
+  border-color:#a3a3a3;
+  background:var(--surface);
 }
 .preset-palette.active{
-  border-color:var(--accent);
+  border-color:var(--text);
 }
 .preset-swatch{
   width:14px;
   height:14px;
-  border-radius:50%;
+  border-radius:0;
   flex-shrink:0;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1);
+  box-shadow:inset 0 0 0 1px rgba(10,10,10,0.15);
 }
 .preset-name{
-  font-size:11px;
-  font-weight:500;
+  font-size:10px;
+  font-weight:400;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
   color:var(--text2);
   margin-left:6px;
 }
@@ -493,50 +476,62 @@ header .header-actions{display:flex;gap:8px}
 }
 .ctrl-label{
   font-size:11px;
-  font-weight:500;
+  font-weight:400;
+  text-transform:uppercase;
+  letter-spacing:0.12em;
   color:var(--text2);
   min-width:70px;
 }
 .ctrl-value{
   font-size:11px;
-  color:var(--accent);
-  font-weight:700;
+  color:var(--text);
+  font-weight:500;
   min-width:28px;
   text-align:right;
 }
 input[type=range]{
   -webkit-appearance:none;
+  appearance:none;
   width:100%;
-  height:3px;
-  border-radius:2px;
-  background:var(--border);
+  height:4px;
+  border-radius:0;
+  background:var(--line);
   outline:none;
   cursor:pointer;
   margin-bottom:14px;
   display:block;
-  transition:background 0.2s;
+  transition:background 0.15s;
 }
 input[type=range]:hover{
-  background:var(--border2);
+  background:#a3a3a3;
 }
 input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;
+  appearance:none;
   width:12px;
   height:12px;
-  border-radius:50%;
-  background:#fff;
-  border:2px solid var(--accent);
+  border-radius:0;
+  background:var(--text);
+  border:none;
   cursor:pointer;
   transition:transform 0.1s;
-  box-shadow:0 0 8px var(--accent-glow);
+  box-shadow:none;
+}
+input[type=range]::-moz-range-thumb{
+  width:12px;
+  height:12px;
+  border-radius:0;
+  background:var(--text);
+  border:none;
+  cursor:pointer;
 }
 input[type=range]::-webkit-slider-thumb:hover{
-  transform:scale(1.2);
+  transform:scale(1.25);
 }
 .select-ctrl{
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:6px;
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:0;
   color:var(--text);
   font-family:var(--font-sans);
   font-size:12px;
@@ -546,11 +541,11 @@ input[type=range]::-webkit-slider-thumb:hover{
   width:100%;
   margin-bottom:14px;
   display:block;
-  transition:all 0.2s;
+  transition:border-color 0.15s ease;
 }
 .select-ctrl:focus, .select-ctrl:hover{
-  border-color:var(--accent);
-  background:var(--surface3);
+  border-color:var(--text);
+  background:var(--bg);
 }
 
 /* ROLES */
@@ -563,31 +558,34 @@ input[type=range]::-webkit-slider-thumb:hover{
   display:flex;
   align-items:center;
   gap:8px;
-  background:var(--surface2);
-  border-radius:8px;
+  background:var(--surface);
+  border-radius:0;
   border:1px solid var(--border);
   padding:6px 10px;
 }
 .assign-label{
   font-size:11px;
-  font-weight:500;
+  font-weight:400;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
   color:var(--text2);
   flex:1;
 }
 .assign-dot{
   width:20px;
   height:20px;
-  border-radius:50%;
-  border:1px solid rgba(255,255,255,0.15);
+  border-radius:0;
+  border:1px solid var(--text);
   cursor:pointer;
-  transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:transform 0.15s ease;
   flex-shrink:0;
   position:relative;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.05);
+  box-shadow:none;
 }
 .assign-dot:hover{
-  transform:scale(1.15);
-  border-color:rgba(255,255,255,0.5);
+  transform:none;
+  border-color:var(--text);
+  outline:1px solid var(--text);
 }
 .assign-dot::after{
   content:attr(data-idx);
@@ -597,15 +595,18 @@ input[type=range]::-webkit-slider-thumb:hover{
   align-items:center;
   justify-content:center;
   font-size:8px;
-  color:rgba(255,255,255,0.85);
+  /* The dot is filled with an arbitrary user colour, so the index needs a halo
+     to stay readable on both light and dark assignments. */
+  color:#fff;
+  text-shadow:0 0 2px rgba(0,0,0,0.9);
   font-weight:700;
 }
 
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-::-webkit-scrollbar-thumb:hover{background:var(--border2)}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:0}
+::-webkit-scrollbar-thumb:hover{background:#a3a3a3}
 
 /* TOAST */
 .toast{
@@ -613,35 +614,38 @@ input[type=range]::-webkit-slider-thumb:hover{
   top:80px;
   left:50%;
   transform:translateX(-50%) translateY(-100px);
-  background:rgba(18,18,28,0.85);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-  border:1px solid var(--border);
-  padding:8px 18px;
-  border-radius:30px;
-  font-size:12px;
-  font-weight:500;
-  color:var(--text);
-  box-shadow:var(--shadow);
+  background:var(--text);
+  border:1px solid var(--text);
+  padding:8px 16px;
+  border-radius:0;
+  font-size:11px;
+  font-weight:400;
+  text-transform:uppercase;
+  letter-spacing:0.15em;
+  color:var(--bg);
+  box-shadow:none;
   z-index:999;
-  transition:transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+  transition:transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
   display:flex;
   align-items:center;
   gap:8px;
   opacity:0;
 }
+.toast.show{
   transform:translateX(-50%) translateY(0);
   opacity:1;
 }
+
 kbd{
-  font-family: monospace;
+  font-family: var(--font-sans);
   background: var(--surface3);
-  color: #fff;
-  border: 1px solid var(--border2);
+  color: var(--text);
+  border: 1px solid var(--text);
   padding: 1px 5px;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 10px;
 }
+
 /* FOCUS MODE TRANSITIONS & STYLES */
 .canvas-area {
   transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -705,7 +709,7 @@ body.focus-mode .canvas-area {
     <div class="panel-section">
       <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
         <span>Pattern Type</span>
-        <input type="text" id="patternSearch" placeholder="Search..." style="width:100px; padding:3px 6px; font-size:10px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); outline:none; font-family:var(--font-sans); transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        <input type="text" id="patternSearch" placeholder="Search..." style="width:100px; padding:3px 6px; font-size:10px; background:var(--bg); border:1px solid var(--line); border-radius:0; color:var(--text); outline:none; font-family:var(--font-sans); transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
       </div>
       <div class="pattern-grid" id="patternGrid" style="margin-top:8px;"></div>
     </div>
@@ -760,22 +764,22 @@ body.focus-mode .canvas-area {
 </div>
 
 <!-- QUICK ACTIONS FLOATING PILL -->
-<div id="quickActionsPill" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(18,18,28,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--border2); border-radius:30px; padding:6px 12px; display:flex; align-items:center; gap:8px; z-index:99; box-shadow:var(--shadow);">
-  <button class="zoom-btn" onclick="undo()" id="pillUndoBtn" title="Undo (Cmd+Z)" style="font-size:12px; padding:4px 8px; border-radius:15px; display:flex; align-items:center; gap:4px; opacity:0.5; cursor:default;" disabled>
+<div id="quickActionsPill" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--surface); border:1px solid var(--border2); border-radius:0; padding:6px 12px; display:flex; align-items:center; gap:8px; z-index:99; box-shadow:none;">
+  <button class="zoom-btn" onclick="undo()" id="pillUndoBtn" title="Undo (Cmd+Z)" style="font-size:12px; padding:4px 8px; border-radius:0; display:flex; align-items:center; gap:4px; opacity:0.5; cursor:default;" disabled>
     <span>&larr;</span> Undo
   </button>
-  <button class="zoom-btn" onclick="redo()" id="pillRedoBtn" title="Redo (Cmd+Shift+Z)" style="font-size:12px; padding:4px 8px; border-radius:15px; display:flex; align-items:center; gap:4px; opacity:0.5; cursor:default;" disabled>
+  <button class="zoom-btn" onclick="redo()" id="pillRedoBtn" title="Redo (Cmd+Shift+Z)" style="font-size:12px; padding:4px 8px; border-radius:0; display:flex; align-items:center; gap:4px; opacity:0.5; cursor:default;" disabled>
     Redo <span>&rarr;</span>
   </button>
   <div style="width:1px; height:16px; background:var(--border);"></div>
-  <button class="zoom-btn" onclick="toggleFocusMode()" id="focusModeBtn" title="Toggle Focus Mode (F)" style="font-size:12px; padding:4px 8px; border-radius:15px; display:flex; align-items:center; gap:4px;">
+  <button class="zoom-btn" onclick="toggleFocusMode()" id="focusModeBtn" title="Toggle Focus Mode (F)" style="font-size:12px; padding:4px 8px; border-radius:0; display:flex; align-items:center; gap:4px;">
     Focus
   </button>
-  <button class="zoom-btn" onclick="randomizeParams(); randomizeColors();" title="Shuffle All (Layout & Colors)" style="font-size:12px; padding:4px 8px; border-radius:15px; display:flex; align-items:center; gap:4px; color:var(--accent2);">
+  <button class="zoom-btn" onclick="randomizeParams(); randomizeColors();" title="Shuffle All (Layout & Colors)" style="font-size:12px; padding:4px 8px; border-radius:0; display:flex; align-items:center; gap:4px; color:var(--accent2);">
     &#9860; Shuffle
   </button>
   <div style="width:1px; height:16px; background:var(--border);"></div>
-  <button class="zoom-btn" onclick="exportPNG()" title="Export PNG" style="font-size:12px; padding:4px 8px; border-radius:15px; display:flex; align-items:center; gap:4px; color:#10b981;">
+  <button class="zoom-btn" onclick="exportPNG()" title="Export PNG" style="font-size:12px; padding:4px 8px; border-radius:0; display:flex; align-items:center; gap:4px; color:var(--text);">
     PNG
   </button>
   <button class="zoom-btn" onclick="toggleShortcutsModal()" title="Keyboard Shortcuts (?)" style="font-size:14px; padding:0 6px;">
@@ -784,10 +788,10 @@ body.focus-mode .canvas-area {
 </div>
 
 <!-- SHORTCUTS MODAL -->
-<div id="shortcutsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center;">
-  <div style="background:var(--surface-solid); border:1px solid var(--border2); border-radius:16px; padding:24px; width:360px; box-shadow:var(--shadow);">
+<div id="shortcutsModal" style="display:none; position:fixed; inset:0; background:rgba(10,10,10,0.45); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:var(--surface-solid); border:1px solid var(--border2); border-radius:0; padding:24px; width:360px; box-shadow:none;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-      <h3 style="font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#fff;">Keyboard Shortcuts</h3>
+      <h3 style="font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:0.15em; color:var(--text);">Keyboard Shortcuts</h3>
       <button onclick="toggleShortcutsModal()" style="background:none; border:none; color:var(--text2); font-size:20px; cursor:pointer; line-height:1;">&times;</button>
     </div>
     <div style="display:flex; flex-direction:column; gap:10px; font-size:12px; color:var(--text2);">
@@ -1170,7 +1174,7 @@ document.addEventListener('click', function(e) {
     var input = document.createElement('input');
     input.type = 'number';
     input.value = originalText;
-    input.style.cssText = 'width: 45px; background: var(--surface3); border: 1px solid var(--accent); border-radius: 4px; color: var(--text); font-size: 10px; font-weight: bold; text-align: right; outline: none; padding: 1px 3px; font-family: inherit; margin: 0;';
+    input.style.cssText = 'width: 45px; background: var(--bg); border: 1px solid var(--accent); border-radius: 0; color: var(--text); font-size: 10px; font-weight: bold; text-align: right; outline: none; padding: 1px 3px; font-family: inherit; margin: 0;';
     
     el.appendChild(input);
     input.focus();
