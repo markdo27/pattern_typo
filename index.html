@@ -48,6 +48,21 @@ body{
 }
 ::selection{background:var(--text);color:var(--bg)}
 
+/* About & licence, in the same paper/ink terms as the rest of the chrome. */
+.about{margin:0}
+.about dt{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;
+  color:var(--text2);margin-top:12px;
+}
+.about dt:first-child{margin-top:0}
+.about dd{margin:4px 0 0;font-size:12px;line-height:1.55;color:var(--text)}
+.about a{color:var(--text);text-decoration:underline;text-underline-offset:2px}
+.about a:hover{color:var(--text2)}
+.about-note{
+  margin:16px 0 0;padding-top:12px;border-top:1px solid var(--border);
+  font-size:10px;color:var(--text2);
+}
+
 /* BACKGROUND GLOWS — retired with the dark theme; the divs stay in the markup. */
 .bg-glow{display:none}
 
@@ -785,6 +800,9 @@ body.focus-mode .canvas-area {
   <button class="zoom-btn" onclick="toggleShortcutsModal()" title="Keyboard Shortcuts (?)" style="font-size:14px; padding:0 6px;">
     ?
   </button>
+  <button class="zoom-btn" onclick="toggleAboutModal()" title="About &amp; Licence" style="font-size:14px; padding:0 6px;">
+    &#9432;
+  </button>
 </div>
 
 <!-- SHORTCUTS MODAL -->
@@ -806,6 +824,27 @@ body.focus-mode .canvas-area {
       <div style="display:flex; justify-content:space-between;"><kbd>&larr; / &rarr;</kbd> <span>Prev / Next Pattern</span></div>
       <div style="display:flex; justify-content:space-between;"><kbd>?</kbd> <span>Show this help</span></div>
     </div>
+  </div>
+</div>
+
+<!-- ABOUT & LICENCE MODAL -->
+<div id="aboutModal" style="display:none; position:fixed; inset:0; background:rgba(10,10,10,0.45); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:var(--surface-solid); border:1px solid var(--border2); border-radius:0; padding:24px; width:420px; max-width:90vw; box-shadow:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h3 style="font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:0.15em; color:var(--text);">About &amp; Licence</h3>
+      <button onclick="toggleAboutModal()" style="background:none; border:none; color:var(--text2); font-size:20px; cursor:pointer; line-height:1;">&times;</button>
+    </div>
+    <dl class="about">
+      <dt>Author</dt>
+      <dd>Mark Do</dd>
+      <dt>Contact</dt>
+      <dd><a href="mailto:dtcmark@gmail.com">dtcmark@gmail.com</a></dd>
+      <dt>Personal use</dt>
+      <dd>Free. Use this tool, and the patterns you make with it, for personal, study and other non commercial work. No permission needed.</dd>
+      <dt>Commercial use</dt>
+      <dd>Ask first. Client, brand, resale and any other paid work needs written permission: <a href="mailto:dtcmark@gmail.com?subject=Commercial%20use%20request">request a licence</a>.</dd>
+    </dl>
+    <p class="about-note">&copy; 2026 Mark Do. Provided as is, with no warranty.</p>
   </div>
 </div>
 
@@ -1018,6 +1057,13 @@ function toggleShortcutsModal(){
     } else {
       m.style.display = 'none';
     }
+  }
+}
+
+function toggleAboutModal(){
+  var m = document.getElementById('aboutModal');
+  if(m) {
+    m.style.display = m.style.display === 'none' ? 'flex' : 'none';
   }
 }
 
